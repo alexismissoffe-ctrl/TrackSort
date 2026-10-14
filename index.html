@@ -194,7 +194,7 @@
   <script>
     var CLIENT_ID_KEY = 'tracksort_client_id';
     var ACCESS_TOKEN_KEY = 'tracksort_spotify_token';
-    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v8';
+    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v9';
     var CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
     var DJ_CRATES = [
@@ -222,7 +222,6 @@
       return new Promise(function(resolve) { setTimeout(resolve, ms); });
     }
 
-    // Spotify Fetch with Automatic Rate Limiting & Retry handling
     async function spotifyFetch(url, options) {
       options = options || {};
       options.headers = options.headers || {};
@@ -230,18 +229,21 @@
 
       var res = await fetch(url, options);
 
-      // Handle Rate Limiting (429) gracefully
+      // Handle Spotify 429 Rate Limiting with UI Countdown
       if (res.status === 429) {
-        var retryAfter = parseInt(res.headers.get('Retry-After') || '2', 10);
-        console.warn("Spotify Rate limited. Backing off for " + retryAfter + " seconds...");
-        await sleep((retryAfter + 1) * 1000);
-        return spotifyFetch(url, options); // Retry once after pause
+        var wait = parseInt(res.headers.get('Retry-After') || '3', 10);
+        var statusEl = document.getElementById('progressStatus');
+        for (var w = wait; w > 0; w--) {
+          if (statusEl) statusEl.textContent = 'Spotify Rate Limit cooldown... resuming in ' + w + 's';
+          await sleep(1000);
+        }
+        if (statusEl) statusEl.textContent = 'Resuming scan...';
+        return spotifyFetch(url, options);
       }
 
-      // Handle Expired Token (401)
       if (res.status === 401) {
         localStorage.removeItem(ACCESS_TOKEN_KEY);
-        alert("Your Spotify login token expired. Please re-authorize.");
+        alert("Your Spotify login token expired. Re-authorizing now...");
         saveAndAuthorize();
         throw new Error("Token expired");
       }
@@ -409,7 +411,6 @@
       location.reload();
     }
 
-    // Robust Scanning Pipeline with Rate Limiting Protection
     async function startLibraryScan() {
       if (!accessToken) {
         toggleAuthModal();
@@ -422,7 +423,9 @@
       var progressStatus = document.getElementById('progressStatus');
       
       progressContainer.classList.remove('hidden');
-      progressStatus.textContent = "Fetching all liked tracks...";
+      progressBar.style.width = '2%';
+      progressPct.textContent = '2%';
+      progressStatus.textContent = "Connecting to Spotify Library...";
 
       try {
         var items = [];
@@ -431,7 +434,7 @@
 
         while (url) {
           var res = await spotifyFetch(url);
-          if (!res.ok) throw new Error("HTTP " + res.status + " while loading tracks");
+          if (!res.ok) throw new Error("HTTP " + res.status + " reading liked tracks");
           var data = await res.json();
           total = data.total || total;
           items = items.concat(data.items || []);
@@ -439,8 +442,9 @@
           var pct = Math.min(Math.round((items.length / total) * 50), 50);
           progressBar.style.width = pct + '%';
           progressPct.textContent = pct + '%';
+          progressStatus.textContent = 'Loaded ' + items.length + ' of ' + total + ' tracks...';
           url = data.next;
-          await sleep(25); // Pace requests to avoid 429
+          await sleep(60); // Gentle pacing
         }
 
         progressStatus.textContent = "Analyzing artist metadata & subgenres...";
@@ -475,7 +479,7 @@
           var pctBatch = 50 + Math.min(Math.round((b / artistIds.length) * 48), 48);
           progressBar.style.width = pctBatch + '%';
           progressPct.textContent = pctBatch + '%';
-          await sleep(40);
+          await sleep(70);
         }
 
         initEmptyStore();
@@ -548,7 +552,7 @@
 
       } catch (err) {
         console.error(err);
-        alert("Scan encountered an issue: " + err.message + "\n\nTry clicking 'Scan Library' again.");
+        alert("Scan issue: " + err.message);
         progressContainer.classList.add('hidden');
       }
     }
