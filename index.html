@@ -111,7 +111,7 @@
       <span id="progressStatus">Reading liked tracks...</span>
       <span id="progressPct" class="font-mono text-deck-green font-bold">0%</span>
     </div>
-    <div class="max-w-7xl mx-auto w-full bg-slate-800 rounded-full h-1 overflow-hidden">
+    <div class="max-w-7xl mx-auto w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
       <div id="progressBar" class="bg-deck-green h-full rounded-full transition-all duration-200" style="width: 0%"></div>
     </div>
   </div>
@@ -172,7 +172,7 @@
         </button>
       </div>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Authorize with Spotify to organize liked songs into playlist crates.
+        Authorize with Spotify to organize liked songs into subgenre playlists.
       </p>
       <div>
         <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Spotify Client ID</label>
@@ -194,7 +194,7 @@
   <script>
     var CLIENT_ID_KEY = 'tracksort_client_id';
     var ACCESS_TOKEN_KEY = 'tracksort_spotify_token';
-    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v7';
+    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v8';
     var CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
     var DJ_CRATES = [
@@ -217,6 +217,37 @@
     var activeDrawerCrateId = null;
     var activeAudioNode = null;
     var currentPlayingId = null;
+
+    function sleep(ms) {
+      return new Promise(function(resolve) { setTimeout(resolve, ms); });
+    }
+
+    // Spotify Fetch with Automatic Rate Limiting & Retry handling
+    async function spotifyFetch(url, options) {
+      options = options || {};
+      options.headers = options.headers || {};
+      options.headers['Authorization'] = 'Bearer ' + accessToken;
+
+      var res = await fetch(url, options);
+
+      // Handle Rate Limiting (429) gracefully
+      if (res.status === 429) {
+        var retryAfter = parseInt(res.headers.get('Retry-After') || '2', 10);
+        console.warn("Spotify Rate limited. Backing off for " + retryAfter + " seconds...");
+        await sleep((retryAfter + 1) * 1000);
+        return spotifyFetch(url, options); // Retry once after pause
+      }
+
+      // Handle Expired Token (401)
+      if (res.status === 401) {
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
+        alert("Your Spotify login token expired. Please re-authorize.");
+        saveAndAuthorize();
+        throw new Error("Token expired");
+      }
+
+      return res;
+    }
 
     function toggleAuthModal() {
       var modal = document.getElementById('authModal');
@@ -332,7 +363,6 @@
       localStorage.setItem(CODE_VERIFIER_KEY, verifier);
       var challenge = await generateCodeChallenge(verifier);
 
-      // Explicit playlist create & read scopes
       var scope = 'user-library-read playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative';
       var redirectUri = getRedirectUri();
 
@@ -379,10 +409,7 @@
       location.reload();
     }
 
-    function sleep(ms) {
-      return new Promise(function(resolve) { setTimeout(resolve, ms); });
-    }
-
+    // Robust Scanning Pipeline with Rate Limiting Protection
     async function startLibraryScan() {
       if (!accessToken) {
         toggleAuthModal();
@@ -403,15 +430,8 @@
         var total = 0;
 
         while (url) {
-          var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + accessToken } });
-          if (!res.ok) {
-            if (res.status === 401) {
-              localStorage.removeItem(ACCESS_TOKEN_KEY);
-              saveAndAuthorize();
-              return;
-            }
-            throw new Error("Spotify track fetch failed");
-          }
+          var res = await spotifyFetch(url);
+          if (!res.ok) throw new Error("HTTP " + res.status + " while loading tracks");
           var data = await res.json();
           total = data.total || total;
           items = items.concat(data.items || []);
@@ -420,6 +440,7 @@
           progressBar.style.width = pct + '%';
           progressPct.textContent = pct + '%';
           url = data.next;
+          await sleep(25); // Pace requests to avoid 429
         }
 
         progressStatus.textContent = "Analyzing artist metadata & subgenres...";
@@ -438,9 +459,7 @@
         for (var b = 0; b < artistIds.length; b += 50) {
           var batch = artistIds.slice(b, b + 50);
           try {
-            var aRes = await fetch('https://api.spotify.com/v1/artists?ids=' + batch.join(','), {
-              headers: { 'Authorization': 'Bearer ' + accessToken }
-            });
+            var aRes = await spotifyFetch('https://api.spotify.com/v1/artists?ids=' + batch.join(','));
             if (aRes.ok) {
               var aData = await aRes.json();
               if (aData.artists) {
@@ -456,7 +475,7 @@
           var pctBatch = 50 + Math.min(Math.round((b / artistIds.length) * 48), 48);
           progressBar.style.width = pctBatch + '%';
           progressPct.textContent = pctBatch + '%';
-          await sleep(50);
+          await sleep(40);
         }
 
         initEmptyStore();
@@ -529,7 +548,7 @@
 
       } catch (err) {
         console.error(err);
-        alert("Scan encountered an issue. Please try again.");
+        alert("Scan encountered an issue: " + err.message + "\n\nTry clicking 'Scan Library' again.");
         progressContainer.classList.add('hidden');
       }
     }
@@ -712,7 +731,6 @@
       alert("All selected playlists were successfully generated on Spotify!");
     }
 
-    // Export with URI validation and error handling
     async function exportSingleCrate(crateId) {
       if (!accessToken) {
         toggleAuthModal();
@@ -728,28 +746,13 @@
       if (exportBtn) exportBtn.textContent = "Creating...";
 
       try {
-        // 1. Fetch current profile
-        var meRes = await fetch('https://api.spotify.com/v1/me', {
-          headers: { 'Authorization': 'Bearer ' + accessToken }
-        });
-        if (!meRes.ok) {
-          if (meRes.status === 401 || meRes.status === 403) {
-            localStorage.removeItem(ACCESS_TOKEN_KEY);
-            alert("Spotify session expired. Re-authorizing write permissions...");
-            saveAndAuthorize();
-            return;
-          }
-          throw new Error("Failed to verify Spotify user profile");
-        }
+        var meRes = await spotifyFetch('https://api.spotify.com/v1/me');
+        if (!meRes.ok) throw new Error("Failed to verify user profile");
         var meData = await meRes.json();
 
-        // 2. Create the playlist container
-        var plRes = await fetch('https://api.spotify.com/v1/users/' + meData.id + '/playlists', {
+        var plRes = await spotifyFetch('https://api.spotify.com/v1/users/' + meData.id + '/playlists', {
           method: 'POST',
-          headers: {
-            'Authorization': 'Bearer ' + accessToken,
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: 'TrackSort - ' + crate.name,
             description: 'Subgenre crate exported from TrackSort.',
@@ -759,19 +762,11 @@
 
         if (!plRes.ok) {
           var plErr = await plRes.json();
-          console.error("Playlist creation error:", plErr);
-          if (plRes.status === 403 || plRes.status === 401) {
-            localStorage.removeItem(ACCESS_TOKEN_KEY);
-            alert("Permission error. Re-authorizing Spotify permissions...");
-            saveAndAuthorize();
-            return;
-          }
-          throw new Error(plErr.error ? plErr.error.message : 'Could not create playlist container');
+          throw new Error(plErr.error ? plErr.error.message : 'Could not create playlist');
         }
 
         var plData = await plRes.json();
 
-        // 3. Strict URI validation (ignoring non-standard and local track URIs)
         var validUris = [];
         for (var u = 0; u < crate.tracks.length; u++) {
           var t = crate.tracks[u];
@@ -780,20 +775,15 @@
           }
         }
 
-        // 4. Batch insertion in chunks of 50
         for (var i = 0; i < validUris.length; i += 50) {
           var chunk = validUris.slice(i, i + 50);
-          var addRes = await fetch('https://api.spotify.com/v1/playlists/' + plData.id + '/tracks', {
+          var addRes = await spotifyFetch('https://api.spotify.com/v1/playlists/' + plData.id + '/tracks', {
             method: 'POST',
-            headers: {
-              'Authorization': 'Bearer ' + accessToken,
-              'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ uris: chunk })
           });
           if (!addRes.ok) {
             var addErr = await addRes.json();
-            console.error("Track insertion error:", addErr);
             throw new Error(addErr.error ? addErr.error.message : 'Failed to insert tracks');
           }
         }
