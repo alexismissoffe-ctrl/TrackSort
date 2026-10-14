@@ -52,11 +52,19 @@
       background: #232733;
       border-radius: 9999px;
     }
+    /* Smooth sliding transitions */
+    #crateDrawer {
+      transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+      will-change: transform;
+    }
+    #crateDrawerBackdrop {
+      transition: opacity 0.3s ease;
+    }
   </style>
 </head>
 <body class="text-slate-200 min-h-screen flex flex-col font-sans antialiased select-none">
 
-  <!-- DJ Deck Header -->
+  <!-- DJ Deck Top Navigation Bar -->
   <header class="sticky top-0 z-40 bg-deck-bg/95 backdrop-blur border-b border-deck-border px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <div class="w-9 h-9 rounded-xl bg-deck-green/20 border border-deck-green/30 flex items-center justify-center text-deck-green shadow-lg">
@@ -127,26 +135,36 @@
     <div id="crateGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
   </main>
 
-  <!-- Drawer View -->
+  <!-- Smooth Slide-Out Track Crate Drawer -->
   <div id="crateDrawerBackdrop" onclick="closeCrateDrawer()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
-  <div id="crateDrawer" class="fixed inset-x-0 bottom-0 z-50 bg-[#12141c] rounded-t-3xl border-t border-deck-border max-h-[85vh] flex flex-col translate-y-full transition-transform duration-300 pb-[calc(var(--sab)+12px)] max-w-3xl mx-auto">
-    <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 flex-shrink-0 cursor-pointer" onclick="closeCrateDrawer()"></div>
+  <div id="crateDrawer" class="fixed inset-x-0 bottom-0 z-50 bg-[#12141c] rounded-t-3xl border-t border-deck-border max-h-[85vh] flex flex-col translate-y-full transition-transform duration-300 pb-[calc(var(--sab)+12px)] max-w-3xl mx-auto shadow-2xl">
+    
+    <!-- Swipe Handle Area -->
+    <div id="drawerSwipeArea" class="w-full py-3 flex flex-col items-center justify-center cursor-pointer select-none">
+      <div class="w-14 h-1.5 bg-slate-700 hover:bg-slate-500 rounded-full transition"></div>
+      <p class="text-[9px] text-slate-500 uppercase tracking-widest mt-1">Swipe down or tap to close</p>
+    </div>
     
     <div class="px-5 pb-3 border-b border-deck-border flex items-center justify-between flex-shrink-0">
       <div>
         <h3 id="drawerCrateTitle" class="text-base font-bold text-white leading-tight">Crate Name</h3>
         <p id="drawerCrateSub" class="text-xs text-slate-400 mt-0.5">0 tracks</p>
       </div>
-      <button onclick="exportActiveDrawerCrate()" class="touch-press px-3 py-1.5 rounded-xl bg-deck-green text-black font-semibold text-xs flex items-center gap-1.5 shadow cursor-pointer">
-        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        Create Spotify Playlist
-      </button>
+      <div class="flex items-center gap-2">
+        <button onclick="exportActiveDrawerCrate()" id="drawerExportBtn" class="touch-press px-3.5 py-1.5 rounded-xl bg-deck-green text-black font-semibold text-xs flex items-center gap-1.5 shadow cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          <span id="drawerExportBtnText">Create Playlist</span>
+        </button>
+        <button onclick="closeCrateDrawer()" class="p-1.5 rounded-xl bg-slate-800 text-slate-400 hover:text-white">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
     </div>
 
     <div id="drawerTrackList" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar"></div>
   </div>
 
-  <!-- Auth Modal -->
+  <!-- Connect Modal -->
   <div id="authModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-deck-card w-full max-w-md rounded-2xl border border-deck-border p-6 space-y-4">
       <div class="flex items-center justify-between">
@@ -156,7 +174,7 @@
         </button>
       </div>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Authorize access with Spotify OAuth PKCE to scan liked songs and build crates.
+        Authorize access with Spotify OAuth PKCE to scan liked songs and create playlists.
       </p>
       <div>
         <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Spotify Client ID</label>
@@ -177,101 +195,29 @@
 
   <script>
     var CLIENT_ID_KEY = 'tracksort_client_id';
-    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v5';
+    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v6';
     var CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
-    // Flexible Subgenre Definitions with broader matching and keyword fallbacks
     var DJ_CRATES = [
-      { 
-        id: 'tech_rolling', 
-        name: 'Tech & Rolling House', 
-        color: '#10b981', 
-        regex: /(tech house|rolling house|bass house|deep tech|groove room|minimal tech|club house|stussy|anotr|pawsa|chris stussy)/i, 
-        exclusions: ['hip hop', 'trap', 'drill'] 
-      },
-      { 
-        id: 'deep_melodic', 
-        name: 'Deep & Melodic House', 
-        color: '#3b82f6', 
-        regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset|chill house|tropical house)/i, 
-        exclusions: ['trap', 'drill'] 
-      },
-      { 
-        id: 'funky_groovy', 
-        name: 'Funky & Groovy House', 
-        color: '#f97316', 
-        regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house|midland|shouse|franky rizardo)/i, 
-        exclusions: ['techno', 'trap'] 
-      },
-      { 
-        id: 'minimal_micro', 
-        name: 'Minimal & Microhouse', 
-        color: '#a855f7', 
-        regex: /(minimal|microhouse|rominimal|micro house|minimal techno)/i, 
-        exclusions: ['hip hop', 'drill'] 
-      },
-      { 
-        id: 'hiphop_rap', 
-        name: 'Hip-Hop / Rap', 
-        color: '#f59e0b', 
-        regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle|grime|french rap|rap francais)/i, 
-        exclusions: ['house', 'techno'] 
-      },
-      { 
-        id: 'techno_hardgroove', 
-        name: 'Techno & Hardgroove', 
-        color: '#ef4444', 
-        regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance|rave)/i, 
-        exclusions: [] 
-      },
-      { 
-        id: 'afro_latin', 
-        name: 'Afro & Latin House', 
-        color: '#ec4899', 
-        regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro|reggaeton)/i, 
-        exclusions: [] 
-      },
-      { 
-        id: 'ukg_dnb', 
-        name: 'UK Garage & DnB', 
-        color: '#06b6d4', 
-        regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat|bassline)/i, 
-        exclusions: [] 
-      },
-      { 
-        id: 'jazz_soul_acoustic', 
-        name: 'Jazz, Soul & Acoustic', 
-        color: '#6366f1', 
-        regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues|ambient|downtempo)/i, 
-        exclusions: ['techno', 'drill'] 
-      },
-      { 
-        id: 'rock_alternative', 
-        name: 'Rock & Alternative', 
-        color: '#f97316', 
-        regex: /(rock|alternative|indie rock|punk|grunge|metal|garage rock)/i, 
-        exclusions: ['hip hop', 'house'] 
-      },
-      { 
-        id: 'pop_dance', 
-        name: 'Pop & Dance', 
-        color: '#8b5cf6', 
-        regex: /(pop|dance pop|synth-pop|indie pop|electropop|europop)/i, 
-        exclusions: ['drill', 'techno'] 
-      },
-      { 
-        id: 'general_house', 
-        name: 'General House & Club', 
-        color: '#14b8a6', 
-        // Catch-all regex: will pick up electronic tracks and any remaining songs
-        regex: /.*/, 
-        exclusions: [] 
-      }
+      { id: 'tech_rolling', name: 'Tech & Rolling House', color: '#10b981', regex: /(tech house|rolling house|bass house|deep tech|groove room|minimal tech|club house|stussy|anotr|pawsa|chris stussy)/i, exclusions: ['hip hop', 'trap', 'drill'] },
+      { id: 'deep_melodic', name: 'Deep & Melodic House', color: '#3b82f6', regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset|chill house|tropical house)/i, exclusions: ['trap', 'drill'] },
+      { id: 'funky_groovy', name: 'Funky & Groovy House', color: '#f97316', regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house|midland|shouse|franky rizardo)/i, exclusions: ['techno', 'trap'] },
+      { id: 'minimal_micro', name: 'Minimal & Microhouse', color: '#a855f7', regex: /(minimal|microhouse|rominimal|micro house|minimal techno)/i, exclusions: ['hip hop', 'drill'] },
+      { id: 'hiphop_rap', name: 'Hip-Hop / Rap', color: '#f59e0b', regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle|grime|french rap|rap francais)/i, exclusions: ['house', 'techno'] },
+      { id: 'techno_hardgroove', name: 'Techno & Hardgroove', color: '#ef4444', regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance|rave)/i, exclusions: [] },
+      { id: 'afro_latin', name: 'Afro & Latin House', color: '#ec4899', regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro|reggaeton)/i, exclusions: [] },
+      { id: 'ukg_dnb', name: 'UK Garage & DnB', color: '#06b6d4', regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat|bassline)/i, exclusions: [] },
+      { id: 'jazz_soul_acoustic', name: 'Jazz, Soul & Acoustic', color: '#6366f1', regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues|ambient|downtempo)/i, exclusions: ['techno', 'drill'] },
+      { id: 'rock_alternative', name: 'Rock & Alternative', color: '#f97316', regex: /(rock|alternative|indie rock|punk|grunge|metal|garage rock)/i, exclusions: ['hip hop', 'house'] },
+      { id: 'pop_dance', name: 'Pop & Dance', color: '#8b5cf6', regex: /(pop|dance pop|synth-pop|indie pop|electropop|europop)/i, exclusions: ['drill', 'techno'] },
+      { id: 'general_house', name: 'General House & Club', color: '#14b8a6', regex: /.*/, exclusions: [] }
     ];
 
     var accessToken = null;
     var crateStore = {};
     var activeDrawerCrateId = null;
+    var activeAudioNode = null;
+    var currentPlayingId = null;
 
     function toggleAuthModal() {
       var modal = document.getElementById('authModal');
@@ -387,7 +333,8 @@
       localStorage.setItem(CODE_VERIFIER_KEY, verifier);
       var challenge = await generateCodeChallenge(verifier);
 
-      var scope = 'user-library-read playlist-modify-public playlist-modify-private';
+      // Scopes explicitly needed for public/private playlist generation
+      var scope = 'user-library-read playlist-modify-public playlist-modify-private playlist-read-private';
       var redirectUri = getRedirectUri();
 
       window.location.href = 'https://accounts.spotify.com/authorize?response_type=code&client_id=' + encodeURIComponent(clientId) + '&scope=' + encodeURIComponent(scope) + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&code_challenge_method=S256&code_challenge=' + encodeURIComponent(challenge);
@@ -493,17 +440,16 @@
               }
             }
           } catch (e) {
-            console.warn("Artist batch error, falling back to track metadata", e);
+            console.warn("Batch failed", e);
           }
           var pctBatch = 50 + Math.min(Math.round((b / artistIds.length) * 48), 48);
           progressBar.style.width = pctBatch + '%';
           progressPct.textContent = pctBatch + '%';
-          await sleep(50); // prevent 429 rate limiting
+          await sleep(50);
         }
 
         initEmptyStore();
 
-        // Categorize each track using artist genres + song title keywords
         for (var j = 0; j < items.length; j++) {
           var t = items[j].track;
           if (!t || !t.id) continue;
@@ -549,7 +495,6 @@
             }
           }
 
-          // Fallback to General House & Club if no strict subgenre was detected
           if (!matched) {
             crateStore['general_house'].tracks.push({
               id: t.id,
@@ -578,6 +523,7 @@
       }
     }
 
+    // Smooth Drawer System with Touch Slide-Out
     function openCrateDrawer(id) {
       activeDrawerCrateId = id;
       var crate = crateStore[id];
@@ -597,7 +543,10 @@
           var row = document.createElement('div');
           row.className = "flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-deck-border hover:border-slate-600 cursor-pointer touch-press";
           row.setAttribute('data-url', track.preview_url || '');
-          row.onclick = function() { playAudioPreview(this.getAttribute('data-url')); };
+          row.setAttribute('data-id', track.id);
+          row.onclick = function() { 
+            toggleTrackDemo(this.getAttribute('data-id'), this.getAttribute('data-url')); 
+          };
           row.innerHTML = 
             '<div class="flex items-center gap-3 overflow-hidden flex-1">' +
               '<img src="' + track.image + '" class="w-9 h-9 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="art">' +
@@ -606,44 +555,135 @@
                 '<p class="text-[10px] text-slate-400 truncate mt-0.5">' + track.artist + '</p>' +
               '</div>' +
             '</div>' +
-            '<button class="p-1 text-deck-green">' +
-              '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' +
-            '</button>';
+            '<div class="flex items-center gap-2">' +
+              '<span id="playIcon-' + track.id + '" class="p-1.5 rounded-lg bg-slate-800 text-deck-green hover:bg-slate-700">' +
+                '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' +
+              '</span>' +
+              '<a href="https://open.spotify.com/track/' + track.id + '" target="_blank" onclick="event.stopPropagation()" class="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white" title="Open in Spotify">' +
+                '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>' +
+              '</a>' +
+            '</div>';
           list.appendChild(row);
         }
       }
 
-      document.getElementById('crateDrawerBackdrop').classList.remove('opacity-0', 'pointer-events-none');
-      document.getElementById('crateDrawer').classList.remove('translate-y-full');
+      var backdrop = document.getElementById('crateDrawerBackdrop');
+      var drawer = document.getElementById('crateDrawer');
+      backdrop.classList.remove('opacity-0', 'pointer-events-none');
+      drawer.style.transform = 'translateY(0%)';
     }
 
     function closeCrateDrawer() {
-      document.getElementById('crateDrawerBackdrop').classList.add('opacity-0', 'pointer-events-none');
-      document.getElementById('crateDrawer').classList.add('translate-y-full');
-      var audio = document.getElementById('audioPlayer');
-      if (audio) audio.pause();
+      var backdrop = document.getElementById('crateDrawerBackdrop');
+      var drawer = document.getElementById('crateDrawer');
+      backdrop.classList.add('opacity-0', 'pointer-events-none');
+      drawer.style.transform = 'translateY(100%)';
+      stopAudioDemo();
     }
 
-    function playAudioPreview(url) {
-      var audio = document.getElementById('audioPlayer');
-      if (url && audio) {
-        audio.src = url;
-        audio.play().catch(function(e) { console.warn(e); });
+    // Touch Swipe Gesture on Drawer Header
+    var touchStartY = 0;
+    var currentTranslateY = 0;
+    var isDragging = false;
+
+    var swipeArea = document.getElementById('drawerSwipeArea');
+    var drawer = document.getElementById('crateDrawer');
+
+    swipeArea.addEventListener('touchstart', function(e) {
+      touchStartY = e.touches[0].clientY;
+      isDragging = true;
+      drawer.style.transition = 'none';
+    }, { passive: true });
+
+    window.addEventListener('touchmove', function(e) {
+      if (!isDragging) return;
+      var currentY = e.touches[0].clientY;
+      var diffY = currentY - touchStartY;
+      if (diffY > 0) {
+        currentTranslateY = diffY;
+        drawer.style.transform = 'translateY(' + diffY + 'px)';
+      }
+    }, { passive: true });
+
+    window.addEventListener('touchend', function() {
+      if (!isDragging) return;
+      isDragging = false;
+      drawer.style.transition = 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)';
+      if (currentTranslateY > 120) {
+        closeCrateDrawer();
       } else {
-        try {
-          var ctx = new (window.AudioContext || window.webkitAudioContext)();
-          var osc = ctx.createOscillator();
-          var gain = ctx.createGain();
-          osc.frequency.setValueAtTime(440, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + 0.8);
-        } catch (e) {}
+        drawer.style.transform = 'translateY(0%)';
+      }
+      currentTranslateY = 0;
+    });
+
+    // Audio Demo Playback with Web Audio Synthesizer fallback
+    function toggleTrackDemo(trackId, previewUrl) {
+      if (currentPlayingId === trackId) {
+        stopAudioDemo();
+        return;
+      }
+      stopAudioDemo();
+      currentPlayingId = trackId;
+
+      var icon = document.getElementById('playIcon-' + trackId);
+      if (icon) icon.innerHTML = '<svg class="w-4 h-4 text-emerald-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+
+      var audio = document.getElementById('audioPlayer');
+      if (previewUrl && previewUrl !== 'null' && previewUrl !== '') {
+        audio.src = previewUrl;
+        audio.play().catch(function() {
+          playSynthesizerSequence();
+        });
+        audio.onended = function() { stopAudioDemo(); };
+      } else {
+        playSynthesizerSequence();
       }
     }
 
+    function stopAudioDemo() {
+      var audio = document.getElementById('audioPlayer');
+      if (audio) {
+        audio.pause();
+        audio.src = '';
+      }
+      if (activeAudioNode) {
+        try { activeAudioNode.stop(); } catch (e) {}
+        activeAudioNode = null;
+      }
+      if (currentPlayingId) {
+        var icon = document.getElementById('playIcon-' + currentPlayingId);
+        if (icon) icon.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+      }
+      currentPlayingId = null;
+    }
+
+    function playSynthesizerSequence() {
+      try {
+        var ctx = new (window.AudioContext || window.webkitAudioContext)();
+        var notes = [261.63, 329.63, 392.00, 523.25];
+        var time = ctx.currentTime;
+        for (var n = 0; n < notes.length; n++) {
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(notes[n], time + (n * 0.18));
+          gain.gain.setValueAtTime(0.2, time + (n * 0.18));
+          gain.gain.exponentialRampToValueAtTime(0.001, time + (n * 0.18) + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(time + (n * 0.18));
+          osc.stop(time + (n * 0.18) + 0.35);
+        }
+        setTimeout(function() {
+          stopAudioDemo();
+        }, 1200);
+      } catch (e) {
+        stopAudioDemo();
+      }
+    }
+
+    // Export Playlists directly to user Spotify account
     function exportActiveDrawerCrate() {
       if (activeDrawerCrateId) exportSingleCrate(activeDrawerCrateId);
     }
@@ -657,13 +697,13 @@
         }
       }
       if (!selected.length) {
-        alert("Please select at least one crate that contains tracks.");
+        alert("Please select at least one crate containing tracks.");
         return;
       }
       for (var s = 0; s < selected.length; s++) {
         await exportSingleCrate(selected[s]);
       }
-      alert("Selected crates exported to your Spotify account!");
+      alert("All selected playlists were successfully generated on Spotify!");
     }
 
     async function exportSingleCrate(crateId) {
@@ -672,28 +712,37 @@
         return;
       }
       var crate = crateStore[crateId];
-      if (!crate || !crate.tracks || !crate.tracks.length) return;
+      if (!crate || !crate.tracks || !crate.tracks.length) {
+        alert("This crate is empty.");
+        return;
+      }
+
+      var exportBtn = document.getElementById('drawerExportBtnText');
+      if (exportBtn) exportBtn.textContent = "Creating...";
 
       try {
-        var userRes = await fetch('https://api.spotify.com/v1/me', {
-          headers: { 'Authorization': 'Bearer ' + accessToken }
-        });
-        var user = await userRes.json();
-
-        var plRes = await fetch('https://api.spotify.com/v1/users/' + user.id + '/playlists', {
+        // Direct modern endpoint: creates playlist under authenticated user without user ID lookup
+        var plRes = await fetch('https://api.spotify.com/v1/me/playlists', {
           method: 'POST',
           headers: {
             'Authorization': 'Bearer ' + accessToken,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            name: 'Liked - ' + crate.name,
-            description: 'Generated by TrackSort DJ Crate Deck.',
+            name: 'TrackSort - ' + crate.name,
+            description: 'Subgenre crate generated with TrackSort.',
             public: false
           })
         });
+
+        if (!plRes.ok) {
+          var errData = await plRes.json();
+          throw new Error(errData.error ? errData.error.message : 'Playlist creation forbidden');
+        }
+
         var pl = await plRes.json();
 
+        // Batch track URIs into groups of 50
         var uris = [];
         for (var u = 0; u < crate.tracks.length; u++) {
           if (crate.tracks[u] && crate.tracks[u].uri) uris.push(crate.tracks[u].uri);
@@ -701,7 +750,7 @@
 
         for (var i = 0; i < uris.length; i += 50) {
           var chunk = uris.slice(i, i + 50);
-          await fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/tracks', {
+          var addRes = await fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/tracks', {
             method: 'POST',
             headers: {
               'Authorization': 'Bearer ' + accessToken,
@@ -709,11 +758,19 @@
             },
             body: JSON.stringify({ uris: chunk })
           });
+          if (!addRes.ok) throw new Error("Failed to insert tracks into playlist");
         }
-        alert('Playlist created for ' + crate.name + ' with ' + uris.length + ' tracks!');
+
+        if (exportBtn) exportBtn.textContent = "Created ✓";
+        alert('Playlist "TrackSort - ' + crate.name + '" (' + uris.length + ' tracks) created on Spotify!');
+        setTimeout(function() {
+          if (exportBtn) exportBtn.textContent = "Create Playlist";
+        }, 2500);
+
       } catch (e) {
         console.error("Export error", e);
-        alert('Error exporting playlist for ' + crate.name);
+        if (exportBtn) exportBtn.textContent = "Create Playlist";
+        alert("Spotify export error: " + e.message + "\n\nTry clicking 'Connect Spotify' to refresh permissions.");
       }
     }
 
@@ -734,7 +791,7 @@
         .replace(/\//g, '_');
     }
 
-    // Startup
+    // Startup Execution
     window.addEventListener('DOMContentLoaded', function() {
       try {
         var savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
