@@ -355,7 +355,7 @@
     }
 
     async function saveAndAuthorize() {
-      const clientId = document.getElementById('clientIdInput').value.trim();
+      const clientId = document.getElementById('clientIdInput').value.trim() || '4c40070fe3c94db8e13c4bc587d6e7';
       if (!clientId) {
         alert("Please enter a valid Spotify Client ID.");
         return;
