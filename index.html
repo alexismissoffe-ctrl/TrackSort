@@ -98,7 +98,7 @@
         <span id="scanBtnText">Scan Library</span>
       </button>
 
-      <button id="authBtn" onclick="toggleAuthModal()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-900 border border-deck-border text-xs font-semibold text-white hover:border-slate-600 flex items-center gap-2 cursor-pointer">
+      <button id="authBtn" onclick="forceReauthorize()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-900 border border-deck-border text-xs font-semibold text-white hover:border-slate-600 flex items-center gap-2 cursor-pointer">
         <span id="authDot" class="w-2 h-2 rounded-full bg-red-500"></span>
         <span id="authText">Connect Spotify</span>
       </button>
@@ -162,128 +162,27 @@
     <div id="drawerTrackList" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar"></div>
   </div>
 
-  <!-- Connect Modal -->
-  <div id="authModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
-    <div class="bg-deck-card w-full max-w-md rounded-2xl border border-deck-border p-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-white">Spotify Connection</h3>
-        <button onclick="toggleAuthModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <p class="text-xs text-slate-400 leading-relaxed">
-        Your Spotify Client ID is configured automatically below.
-      </p>
-      <div>
-        <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Spotify Client ID</label>
-        <input type="text" id="clientIdInput" value="4c40070fe3c94d4db8e13c4bc587d6e7" class="w-full bg-slate-900 border border-deck-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-deck-green font-mono">
-      </div>
-      <div class="pt-2 flex gap-2">
-        <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2 bg-deck-green text-black font-bold text-xs rounded-xl shadow transition cursor-pointer">
-          Authorize with Spotify
-        </button>
-        <button onclick="clearStoredAuth()" class="touch-press px-3 py-2 bg-slate-800 text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-700 cursor-pointer">
-          Reset
-        </button>
-      </div>
-    </div>
-  </div>
-
   <audio id="audioPlayer" preload="auto" class="hidden"></audio>
 
   <script>
-    // Exact 32-character Client ID hardcoded directly
-    var DEFAULT_CLIENT_ID = '4c40070fe3c94d4db8e13c4bc587d6e7';
-    var CLIENT_ID_KEY = 'tracksort_client_id_v2';
-    var ACCESS_TOKEN_KEY = 'tracksort_spotify_token_v2';
-    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v11';
-    var CODE_VERIFIER_KEY = 'tracksort_code_verifier';
+    var CLIENT_ID = '4c40070fe3c94d4db8e13c4bc587d6e7';
+    var TOKEN_KEY = 'tracksort_token_clean';
+    var CRATES_KEY = 'tracksort_crates_clean';
+    var VERIFIER_KEY = 'tracksort_verifier_clean';
 
     var DJ_CRATES = [
-      { 
-        id: 'tech_rolling', 
-        name: 'Tech & Rolling House', 
-        color: '#10b981', 
-        regex: /(tech house|rolling house|bass house|deep tech|groove room|minimal tech|club house|pawsa|stussy|anotr|chris stussy|cloonee|michael bibi|dennis cruz|beltran|solid grooves|fisher|dom dolla|san pacho|vintage culture)/i, 
-        exclusions: ['hip hop', 'trap', 'drill'] 
-      },
-      { 
-        id: 'deep_melodic', 
-        name: 'Deep & Melodic House', 
-        color: '#3b82f6', 
-        regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset|chill house|tropical house|kettama|mall grab|lane 8|ben b\u00f6hmer|rufus du sol|tinlicker|elderbrook|monolink|yotto)/i, 
-        exclusions: ['trap', 'drill'] 
-      },
-      { 
-        id: 'funky_groovy', 
-        name: 'Funky & Groovy House', 
-        color: '#f97316', 
-        regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house|midland|shouse|franky rizardo|folamour|purple disco machine|armand van helden|bob sinclar|duck sauce|kerri chandler)/i, 
-        exclusions: ['techno', 'trap'] 
-      },
-      { 
-        id: 'minimal_micro', 
-        name: 'Minimal & Microhouse', 
-        color: '#a855f7', 
-        regex: /(minimal|microhouse|rominimal|micro house|minimal techno|villalobos|raresh|prasp|rhadoo|barac|priku)/i, 
-        exclusions: ['hip hop', 'drill'] 
-      },
-      { 
-        id: 'hiphop_rap', 
-        name: 'Hip-Hop / Rap', 
-        color: '#f59e0b', 
-        regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle|grime|french rap|rap francais|drake|travis scott|kendrick|future|playboi carti|metro boomin|gunna|lil baby|21 savage|j cole|kanye|asap rocky|central cee|freeze corleone|gazo|tiakola|plk|damso|booba|sch|josman)/i, 
-        exclusions: ['house', 'techno'] 
-      },
-      { 
-        id: 'techno_hardgroove', 
-        name: 'Techno & Hardgroove', 
-        color: '#ef4444', 
-        regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance|rave|i hate models|charlotte de witte|amelie lens|klangkuenstler|reinier zonneveld|kobosil|hector oaks|carl cox)/i, 
-        exclusions: [] 
-      },
-      { 
-        id: 'afro_latin', 
-        name: 'Afro & Latin House', 
-        color: '#ec4899', 
-        regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro|reggaeton|bad bunny|feid|rauw alejandro|j balvin|burna boy|wizkid|rema|asake|major league djz|black coffee|shimza|keinemusik|&me|rampa|adam port)/i, 
-        exclusions: [] 
-      },
-      { 
-        id: 'ukg_dnb', 
-        name: 'UK Garage & DnB', 
-        color: '#06b6d4', 
-        regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat|bassline|fred again|overmono|chase & status|sub focus|wilkinson|bou|hedex|shy fx|bicep|sammy virji|conducta)/i, 
-        exclusions: [] 
-      },
-      { 
-        id: 'jazz_soul_acoustic', 
-        name: 'Jazz, Soul & Acoustic', 
-        color: '#6366f1', 
-        regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues|ambient|downtempo|debussy|chopin|mozart|miles davis|coltrane|bill evans|chet baker|tom misch|masego|fkj|jordan rakei|leon bridges)/i, 
-        exclusions: ['techno', 'drill'] 
-      },
-      { 
-        id: 'rock_alternative', 
-        name: 'Rock & Alternative', 
-        color: '#f97316', 
-        regex: /(rock|alternative|indie rock|punk|grunge|metal|garage rock|arctic monkeys|strokes|nirvana|radiohead|oasis|red hot chili peppers|pink floyd|beatles|queen|tame impala|fontaines d.c.|the clash)/i, 
-        exclusions: ['hip hop', 'house'] 
-      },
-      { 
-        id: 'pop_dance', 
-        name: 'Pop & Dance', 
-        color: '#8b5cf6', 
-        regex: /(pop|dance pop|synth-pop|indie pop|electropop|europop|dua lipa|the weeknd|billie eilish|harry styles|taylor swift|calvin harris|david guetta|tiesto|avicii|chainsmokers)/i, 
-        exclusions: ['drill', 'techno'] 
-      },
-      { 
-        id: 'general_house', 
-        name: 'General House & Club', 
-        color: '#14b8a6', 
-        regex: /.*/, 
-        exclusions: [] 
-      }
+      { id: 'tech_rolling', name: 'Tech & Rolling House', color: '#10b981', regex: /(tech house|rolling house|bass house|deep tech|groove room|minimal tech|club house|pawsa|stussy|anotr|chris stussy|cloonee|michael bibi|dennis cruz|beltran|solid grooves|fisher|dom dolla|san pacho|vintage culture)/i, exclusions: ['hip hop', 'trap', 'drill'] },
+      { id: 'deep_melodic', name: 'Deep & Melodic House', color: '#3b82f6', regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset|chill house|tropical house|kettama|mall grab|lane 8|ben b\u00f6hmer|rufus du sol|tinlicker|elderbrook|monolink|yotto)/i, exclusions: ['trap', 'drill'] },
+      { id: 'funky_groovy', name: 'Funky & Groovy House', color: '#f97316', regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house|midland|shouse|franky rizardo|folamour|purple disco machine|armand van helden|bob sinclar|duck sauce|kerri chandler)/i, exclusions: ['techno', 'trap'] },
+      { id: 'minimal_micro', name: 'Minimal & Microhouse', color: '#a855f7', regex: /(minimal|microhouse|rominimal|micro house|minimal techno|villalobos|raresh|prasp|rhadoo|barac|priku)/i, exclusions: ['hip hop', 'drill'] },
+      { id: 'hiphop_rap', name: 'Hip-Hop / Rap', color: '#f59e0b', regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle|grime|french rap|rap francais|drake|travis scott|kendrick|future|playboi carti|metro boomin|gunna|lil baby|21 savage|j cole|kanye|asap rocky|central cee|freeze corleone|gazo|tiakola|plk|damso|booba|sch|josman)/i, exclusions: ['house', 'techno'] },
+      { id: 'techno_hardgroove', name: 'Techno & Hardgroove', color: '#ef4444', regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance|rave|i hate models|charlotte de witte|amelie lens|klangkuenstler|reinier zonneveld|kobosil|hector oaks|carl cox)/i, exclusions: [] },
+      { id: 'afro_latin', name: 'Afro & Latin House', color: '#ec4899', regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro|reggaeton|bad bunny|feid|rauw alejandro|j balvin|burna boy|wizkid|rema|asake|major league djz|black coffee|shimza|keinemusik|&me|rampa|adam port)/i, exclusions: [] },
+      { id: 'ukg_dnb', name: 'UK Garage & DnB', color: '#06b6d4', regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat|bassline|fred again|overmono|chase & status|sub focus|wilkinson|bou|hedex|shy fx|bicep|sammy virji|conducta)/i, exclusions: [] },
+      { id: 'jazz_soul_acoustic', name: 'Jazz, Soul & Acoustic', color: '#6366f1', regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues|ambient|downtempo|debussy|chopin|mozart|miles davis|coltrane|bill evans|chet baker|tom misch|masego|fkj|jordan rakei|leon bridges)/i, exclusions: ['techno', 'drill'] },
+      { id: 'rock_alternative', name: 'Rock & Alternative', color: '#f97316', regex: /(rock|alternative|indie rock|punk|grunge|metal|garage rock|arctic monkeys|strokes|nirvana|radiohead|oasis|red hot chili peppers|pink floyd|beatles|queen|tame impala|fontaines d.c.|the clash)/i, exclusions: ['hip hop', 'house'] },
+      { id: 'pop_dance', name: 'Pop & Dance', color: '#8b5cf6', regex: /(pop|dance pop|synth-pop|indie pop|electropop|europop|dua lipa|the weeknd|billie eilish|harry styles|taylor swift|calvin harris|david guetta|tiesto|avicii|chainsmokers)/i, exclusions: ['drill', 'techno'] },
+      { id: 'general_house', name: 'General House & Club', color: '#14b8a6', regex: /.*/, exclusions: [] }
     ];
 
     var accessToken = null;
@@ -293,11 +192,6 @@
 
     function sleep(ms) {
       return new Promise(function(resolve) { setTimeout(resolve, ms); });
-    }
-
-    function toggleAuthModal() {
-      var modal = document.getElementById('authModal');
-      if (modal) modal.classList.toggle('hidden');
     }
 
     function initEmptyStore() {
@@ -400,23 +294,20 @@
       return window.location.origin + window.location.pathname;
     }
 
-    async function saveAndAuthorize() {
-      var clientId = DEFAULT_CLIENT_ID;
-      localStorage.setItem(CLIENT_ID_KEY, clientId);
-
+    async function forceReauthorize() {
+      localStorage.removeItem(TOKEN_KEY);
       var verifier = generateRandomString(64);
-      localStorage.setItem(CODE_VERIFIER_KEY, verifier);
+      localStorage.setItem(VERIFIER_KEY, verifier);
       var challenge = await generateCodeChallenge(verifier);
 
       var scope = 'user-library-read playlist-modify-public playlist-modify-private playlist-read-private playlist-read-collaborative';
       var redirectUri = getRedirectUri();
 
-      window.location.href = 'https://accounts.spotify.com/authorize?response_type=code&client_id=' + encodeURIComponent(clientId) + '&scope=' + encodeURIComponent(scope) + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&code_challenge_method=S256&code_challenge=' + encodeURIComponent(challenge);
+      window.location.href = 'https://accounts.spotify.com/authorize?response_type=code&client_id=' + encodeURIComponent(CLIENT_ID) + '&scope=' + encodeURIComponent(scope) + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&code_challenge_method=S256&code_challenge=' + encodeURIComponent(challenge);
     }
 
     async function exchangeCodeForToken(code) {
-      var clientId = DEFAULT_CLIENT_ID;
-      var verifier = localStorage.getItem(CODE_VERIFIER_KEY);
+      var verifier = localStorage.getItem(VERIFIER_KEY);
       var redirectUri = getRedirectUri();
 
       try {
@@ -424,7 +315,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
-            client_id: clientId,
+            client_id: CLIENT_ID,
             grant_type: 'authorization_code',
             code: code,
             redirect_uri: redirectUri,
@@ -434,7 +325,7 @@
         var data = await res.json();
         if (data.access_token) {
           accessToken = data.access_token;
-          localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+          localStorage.setItem(TOKEN_KEY, accessToken);
           setConnectedUI(true);
         }
       } catch (err) {
@@ -449,15 +340,10 @@
       if (txt) txt.textContent = connected ? "Connected" : "Connect Spotify";
     }
 
-    function clearStoredAuth() {
-      localStorage.clear();
-      location.reload();
-    }
-
     // Direct, rate-limit resilient scanning
     async function startLibraryScan() {
       if (!accessToken) {
-        toggleAuthModal();
+        forceReauthorize();
         return;
       }
 
@@ -471,6 +357,8 @@
       progressPct.textContent = '3%';
       progressStatus.textContent = "Connecting to Spotify...";
 
+      initEmptyStore();
+
       try {
         var items = [];
         var url = 'https://api.spotify.com/v1/me/tracks?limit=50';
@@ -481,21 +369,20 @@
             headers: { 'Authorization': 'Bearer ' + accessToken }
           });
 
-          // Spotify 429 Rate Limit Cooldown Handler
+          // Spotify 429 Rate Limit Handler
           if (res.status === 429) {
-            var retrySec = parseInt(res.headers.get('Retry-After') || '5', 10);
+            var retrySec = parseInt(res.headers.get('Retry-After') || '6', 10);
             for (var s = retrySec; s > 0; s--) {
               progressStatus.textContent = 'Spotify Rate Limit reached. Pausing for ' + s + 's...';
               await sleep(1000);
             }
             progressStatus.textContent = 'Resuming scan...';
-            continue; // retry same page
+            continue;
           }
 
           if (res.status === 401) {
-            localStorage.removeItem(ACCESS_TOKEN_KEY);
-            alert("Spotify token expired. Re-authorizing now...");
-            saveAndAuthorize();
+            alert("Spotify session expired. Re-authorizing now...");
+            forceReauthorize();
             return;
           }
 
@@ -503,50 +390,51 @@
 
           var data = await res.json();
           total = data.total || total;
-          items = items.concat(data.items || []);
-          
-          var pct = Math.min(Math.round((items.length / total) * 100), 96);
-          progressBar.style.width = pct + '%';
-          progressPct.textContent = pct + '%';
-          progressStatus.textContent = 'Fetched ' + items.length + ' of ' + total + ' tracks...';
-          
-          url = data.next;
-          await sleep(120); // 120ms keeps requests safely under Spotify rate limits
-        }
+          var newItems = data.items || [];
+          items = items.concat(newItems);
 
-        progressStatus.textContent = "Sorting into subgenre crates...";
-        initEmptyStore();
+          // Classify these newly loaded tracks immediately
+          for (var j = 0; j < newItems.length; j++) {
+            var t = newItems[j].track;
+            if (!t || !t.id) continue;
 
-        for (var j = 0; j < items.length; j++) {
-          var t = items[j].track;
-          if (!t || !t.id) continue;
-
-          var artNames = [];
-          if (t.artists) {
-            for (var a = 0; a < t.artists.length; a++) {
-              artNames.push(t.artists[a].name);
+            var artNames = [];
+            if (t.artists) {
+              for (var a = 0; a < t.artists.length; a++) artNames.push(t.artists[a].name);
             }
-          }
 
-          var searchTokens = artNames.join(' ') + ' ' + (t.name || '') + ' ' + (t.album ? t.album.name : '');
-          var searchStr = searchTokens.toLowerCase();
-          var matched = false;
+            var searchStr = (artNames.join(' ') + ' ' + (t.name || '') + ' ' + (t.album ? t.album.name : '')).toLowerCase();
+            var matched = false;
 
-          for (var cIdx = 0; cIdx < DJ_CRATES.length; cIdx++) {
-            var def = DJ_CRATES[cIdx];
-            if (def.id === 'general_house') continue;
+            for (var cIdx = 0; cIdx < DJ_CRATES.length; cIdx++) {
+              var def = DJ_CRATES[cIdx];
+              if (def.id === 'general_house') continue;
 
-            var excluded = false;
-            if (def.exclusions) {
-              for (var ex = 0; ex < def.exclusions.length; ex++) {
-                if (searchStr.indexOf(def.exclusions[ex]) !== -1) {
-                  excluded = true;
-                  break;
+              var excluded = false;
+              if (def.exclusions) {
+                for (var ex = 0; ex < def.exclusions.length; ex++) {
+                  if (searchStr.indexOf(def.exclusions[ex]) !== -1) {
+                    excluded = true;
+                    break;
+                  }
                 }
               }
+              if (!excluded && def.regex.test(searchStr)) {
+                crateStore[def.id].tracks.push({
+                  id: t.id,
+                  uri: 'spotify:track:' + t.id,
+                  name: t.name,
+                  artist: artNames.join(', '),
+                  preview_url: t.preview_url,
+                  image: (t.album && t.album.images && t.album.images[0] && t.album.images[0].url) || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
+                });
+                matched = true;
+                break;
+              }
             }
-            if (!excluded && def.regex.test(searchStr)) {
-              crateStore[def.id].tracks.push({
+
+            if (!matched) {
+              crateStore['general_house'].tracks.push({
                 id: t.id,
                 uri: 'spotify:track:' + t.id,
                 name: t.name,
@@ -554,28 +442,26 @@
                 preview_url: t.preview_url,
                 image: (t.album && t.album.images && t.album.images[0] && t.album.images[0].url) || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
               });
-              matched = true;
-              break;
             }
           }
 
-          if (!matched) {
-            crateStore['general_house'].tracks.push({
-              id: t.id,
-              uri: 'spotify:track:' + t.id,
-              name: t.name,
-              artist: artNames.join(', '),
-              preview_url: t.preview_url,
-              image: (t.album && t.album.images && t.album.images[0] && t.album.images[0].url) || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
-            });
-          }
+          // Live updates to the screen
+          renderCrates();
+
+          var pct = Math.min(Math.round((items.length / total) * 100), 99);
+          progressBar.style.width = pct + '%';
+          progressPct.textContent = pct + '%';
+          progressStatus.textContent = 'Organized ' + items.length + ' of ' + total + ' tracks...';
+          
+          url = data.next;
+          await sleep(180); // 180ms spacing eliminates 429 rate-limiting
         }
 
-        localStorage.setItem(CACHED_CRATES_KEY, JSON.stringify(crateStore));
+        localStorage.setItem(CRATES_KEY, JSON.stringify(crateStore));
 
         progressBar.style.width = '100%';
         progressPct.textContent = '100%';
-        setTimeout(function() { progressContainer.classList.add('hidden'); }, 500);
+        setTimeout(function() { progressContainer.classList.add('hidden'); }, 400);
 
         document.getElementById('librarySummaryBadge').textContent = items.length + ' Liked Tracks Sorted';
         renderCrates();
@@ -763,7 +649,7 @@
 
     async function exportSingleCrate(crateId) {
       if (!accessToken) {
-        toggleAuthModal();
+        forceReauthorize();
         return;
       }
       var crate = crateStore[crateId];
@@ -859,23 +745,20 @@
     // Startup Execution
     window.addEventListener('DOMContentLoaded', function() {
       try {
-        var input = document.getElementById('clientIdInput');
-        if (input) input.value = DEFAULT_CLIENT_ID;
-
-        var storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
-        if (storedToken) {
-          accessToken = storedToken;
-          setConnectedUI(true);
-        }
-
         var params = new URLSearchParams(window.location.search);
         var code = params.get('code');
         if (code) {
           history.replaceState(null, '', window.location.pathname);
           exchangeCodeForToken(code);
+        } else {
+          var storedToken = localStorage.getItem(TOKEN_KEY);
+          if (storedToken) {
+            accessToken = storedToken;
+            setConnectedUI(true);
+          }
         }
 
-        var cached = localStorage.getItem(CACHED_CRATES_KEY);
+        var cached = localStorage.getItem(CRATES_KEY);
         if (cached) {
           try {
             crateStore = JSON.parse(cached);
