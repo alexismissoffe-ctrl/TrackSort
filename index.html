@@ -90,7 +90,7 @@
         <span id="scanBtnText">Scan Library</span>
       </button>
 
-      <button id="authBtn" onclick="toggleAuthModal()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-900 border border-deck-border text-xs font-semibold text-white hover:border-slate-600 flex items-center gap-2">
+      <button id="authBtn" onclick="toggleAuthModal()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-900 border border-deck-border text-xs font-semibold text-white hover:border-slate-600 flex items-center gap-2 cursor-pointer">
         <span id="authDot" class="w-2 h-2 rounded-full bg-red-500"></span>
         <span id="authText">Connect Spotify</span>
       </button>
@@ -155,7 +155,7 @@
         </button>
       </div>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Authorize access with Spotify OAuth PKCE to read liked tracks and create crates.
+        Authorize access with Spotify OAuth PKCE to scan liked songs and build crates.
       </p>
       <div>
         <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Spotify Client ID</label>
@@ -176,94 +176,22 @@
 
   <script>
     const CLIENT_ID_KEY = 'tracksort_client_id';
-    const CACHED_CRATES_KEY = 'tracksort_saved_crates_v2';
+    const CACHED_CRATES_KEY = 'tracksort_saved_crates_v3';
     const CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
     const DJ_CRATES = [
-      {
-        id: 'hiphop_rap',
-        name: 'Hip-Hop / Rap',
-        color: '#f59e0b',
-        regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle)/i,
-        exclusions: ['house', 'techno']
-      },
-      {
-        id: 'tech_rolling',
-        name: 'Tech & Rolling House',
-        color: '#10b981',
-        regex: /(tech house|rolling house|bass house|deep tech|groove room)/i,
-        exclusions: ['hip hop', 'trap', 'drill']
-      },
-      {
-        id: 'funky_groovy',
-        name: 'Funky & Groovy House',
-        color: '#f97316',
-        regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house)/i,
-        exclusions: ['techno', 'trap']
-      },
-      {
-        id: 'deep_melodic',
-        name: 'Deep & Melodic House',
-        color: '#3b82f6',
-        regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset)/i,
-        exclusions: ['trap', 'drill']
-      },
-      {
-        id: 'minimal_micro',
-        name: 'Minimal & Microhouse',
-        color: '#a855f7',
-        regex: /(minimal house|microhouse|rominimal|minimal techno|micro house)/i,
-        exclusions: ['hip hop', 'drill']
-      },
-      {
-        id: 'afro_latin',
-        name: 'Afro & Latin House',
-        color: '#ec4899',
-        regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro)/i,
-        exclusions: []
-      },
-      {
-        id: 'general_house',
-        name: 'General House & Club',
-        color: '#14b8a6',
-        regex: /(house|club|electro house|dance)/i,
-        exclusions: ['hip hop', 'rap', 'rock']
-      },
-      {
-        id: 'techno_hardgroove',
-        name: 'Techno & Hardgroove',
-        color: '#ef4444',
-        regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance)/i,
-        exclusions: []
-      },
-      {
-        id: 'ukg_dnb',
-        name: 'UK Garage & DnB',
-        color: '#06b6d4',
-        regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat)/i,
-        exclusions: []
-      },
-      {
-        id: 'jazz_soul_acoustic',
-        name: 'Jazz, Soul & Acoustic',
-        color: '#6366f1',
-        regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues)/i,
-        exclusions: ['techno', 'drill']
-      },
-      {
-        id: 'rock_alternative',
-        name: 'Rock & Alternative',
-        color: '#f97316',
-        regex: /(rock|alternative|indie rock|punk|grunge|metal)/i,
-        exclusions: ['hip hop', 'house']
-      },
-      {
-        id: 'pop_dance',
-        name: 'Pop & Dance',
-        color: '#8b5cf6',
-        regex: /(pop|dance pop|synth-pop|indie pop)/i,
-        exclusions: ['drill', 'techno']
-      }
+      { id: 'hiphop_rap', name: 'Hip-Hop / Rap', color: '#f59e0b', regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle)/i, exclusions: ['house', 'techno'] },
+      { id: 'tech_rolling', name: 'Tech & Rolling House', color: '#10b981', regex: /(tech house|rolling house|bass house|deep tech|groove room)/i, exclusions: ['hip hop', 'trap', 'drill'] },
+      { id: 'funky_groovy', name: 'Funky & Groovy House', color: '#f97316', regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house)/i, exclusions: ['techno', 'trap'] },
+      { id: 'deep_melodic', name: 'Deep & Melodic House', color: '#3b82f6', regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset)/i, exclusions: ['trap', 'drill'] },
+      { id: 'minimal_micro', name: 'Minimal & Microhouse', color: '#a855f7', regex: /(minimal house|microhouse|rominimal|minimal techno|micro house)/i, exclusions: ['hip hop', 'drill'] },
+      { id: 'afro_latin', name: 'Afro & Latin House', color: '#ec4899', regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro)/i, exclusions: [] },
+      { id: 'general_house', name: 'General House & Club', color: '#14b8a6', regex: /(house|club|electro house|dance)/i, exclusions: ['hip hop', 'rap', 'rock'] },
+      { id: 'techno_hardgroove', name: 'Techno & Hardgroove', color: '#ef4444', regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance)/i, exclusions: [] },
+      { id: 'ukg_dnb', name: 'UK Garage & DnB', color: '#06b6d4', regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat)/i, exclusions: [] },
+      { id: 'jazz_soul_acoustic', name: 'Jazz, Soul & Acoustic', color: '#6366f1', regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues)/i, exclusions: ['techno', 'drill'] },
+      { id: 'rock_alternative', name: 'Rock & Alternative', color: '#f97316', regex: /(rock|alternative|indie rock|punk|grunge|metal)/i, exclusions: ['hip hop', 'house'] },
+      { id: 'pop_dance', name: 'Pop & Dance', color: '#8b5cf6', regex: /(pop|dance pop|synth-pop|indie pop)/i, exclusions: ['drill', 'techno'] }
     ];
 
     let accessToken = null;
@@ -271,31 +199,12 @@
     let activeDrawerCrateId = null;
     const audio = document.getElementById('audioPlayer');
 
-    window.addEventListener('DOMContentLoaded', async () => {
-      const savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
-      const input = document.getElementById('clientIdInput');
-      if (input) input.value = savedClientId;
-
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      if (code) {
-        history.replaceState(null, '', window.location.pathname);
-        await exchangeCodeForToken(code);
+    function toggleAuthModal() {
+      const modal = document.getElementById('authModal');
+      if (modal) {
+        modal.classList.toggle('hidden');
       }
-
-      const cached = localStorage.getItem(CACHED_CRATES_KEY);
-      if (cached) {
-        try {
-          crateStore = JSON.parse(cached);
-          renderCrates();
-          document.getElementById('librarySummaryBadge').textContent = 'Library Restored from Cache';
-        } catch (e) {
-          initEmptyStore();
-        }
-      } else {
-        initEmptyStore();
-      }
-    });
+    }
 
     function initEmptyStore() {
       crateStore = {};
@@ -305,9 +214,79 @@
       renderCrates();
     }
 
-    function toggleAuthModal() {
-      const modal = document.getElementById('authModal');
-      if (modal) modal.classList.toggle('hidden');
+    function renderCrates() {
+      const grid = document.getElementById('crateGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      DJ_CRATES.forEach(c => {
+        const crate = crateStore[c.id] || { ...c, tracks: [], selected: true };
+        const tracks = Array.isArray(crate.tracks) ? crate.tracks : [];
+        const count = tracks.length;
+        const track1 = tracks[0];
+        const track2 = tracks[1];
+
+        const artistsSummary = count 
+          ? [...new Set(tracks.flatMap(t => (t.artist || '').split(', ')))].filter(Boolean).slice(0, 4).join(', ')
+          : 'No tracks assigned';
+
+        const card = document.createElement('div');
+        card.className = "bg-deck-card border border-deck-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-deck-borderHover transition-all";
+        card.innerHTML = `
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" ${crate.selected ? 'checked' : ''} onchange="toggleSelect('${c.id}', this.checked)" class="w-4 h-4 rounded accent-blue-500 bg-slate-900 border-deck-border cursor-pointer">
+                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${c.color}"></span>
+              </div>
+              <span class="text-[10px] font-mono tracking-wider ${count ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-900'} px-2 py-0.5 rounded-md border border-slate-800">
+                ${count} Tracks
+              </span>
+            </div>
+
+            <h3 class="text-sm font-bold text-white tracking-tight leading-tight">${c.name}</h3>
+            <p class="text-[10px] text-slate-400 truncate mt-1">${artistsSummary}</p>
+          </div>
+
+          <div class="space-y-1.5 min-h-[50px] flex flex-col justify-center">
+            ${count && track1 ? `
+              <div class="flex items-center justify-between text-[11px] text-slate-300">
+                <span class="truncate max-w-[130px] font-medium">\${track1.name || ''}</span>
+                <span class="text-[10px] text-slate-500 font-mono">126 BPM · 8A</span>
+              </div>
+              \${track2 ? `
+              <div class="flex items-center justify-between text-[11px] text-slate-300">
+                <span class="truncate max-w-[130px] font-medium">${track2.name || ''}</span>
+                <span class="text-[10px] text-slate-500 font-mono">124 BPM · 2A</span>
+              </div>` : ''}
+            ` : `
+              <p class="text-[11px] text-slate-600 italic">Crate empty</p>
+            `}
+          </div>
+
+          <div class="flex items-center gap-2 pt-2 border-t border-deck-border/60">
+            <button onclick="openCrateDrawer('${c.id}')" class="touch-press flex-1 py-1.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-deck-border text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 transition cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+              View Crate
+            </button>
+            <button onclick="exportSingleCrate('${c.id}')" title="Export to Spotify" class="touch-press p-1.5 px-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-deck-border text-slate-300 text-xs font-bold transition cursor-pointer">
+              +
+            </button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleSelect(id, val) {
+      if (crateStore[id]) crateStore[id].selected = val;
+    }
+
+    function toggleSelectAll(val) {
+      DJ_CRATES.forEach(c => {
+        if (crateStore[c.id]) crateStore[c.id].selected = val;
+      });
+      renderCrates();
     }
 
     function getRedirectUri() {
@@ -315,8 +294,8 @@
     }
 
     async function saveAndAuthorize() {
-      const inputVal = document.getElementById('clientIdInput').value.trim();
-      const clientId = inputVal || '4c40070fe3c94db8e13c4bc587d6e7';
+      const input = document.getElementById('clientIdInput');
+      const clientId = (input && input.value.trim()) || '4c40070fe3c94db8e13c4bc587d6e7';
       localStorage.setItem(CLIENT_ID_KEY, clientId);
 
       const verifier = generateRandomString(64);
@@ -455,81 +434,6 @@
       }
     }
 
-    function renderCrates() {
-      const grid = document.getElementById('crateGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-
-      DJ_CRATES.forEach(c => {
-        const crate = crateStore[c.id] || { ...c, tracks: [], selected: true };
-        const tracks = crate.tracks || [];
-        const count = tracks.length;
-        const track1 = tracks[0];
-        const track2 = tracks[1];
-
-        const artistsSummary = count 
-          ? [...new Set(tracks.flatMap(t => (t.artist || '').split(', ')))].filter(Boolean).slice(0, 4).join(', ')
-          : 'No tracks assigned';
-
-        const card = document.createElement('div');
-        card.className = "bg-deck-card border border-deck-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-deck-borderHover transition-all";
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center gap-2">
-                <input type="checkbox" ${crate.selected ? 'checked' : ''} onchange="toggleSelect('${c.id}', this.checked)" class="w-4 h-4 rounded accent-blue-500 bg-slate-900 border-deck-border cursor-pointer">
-                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${c.color}"></span>
-              </div>
-              <span class="text-[10px] font-mono tracking-wider ${count ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-900'} px-2 py-0.5 rounded-md border border-slate-800">
-                ${count} Tracks
-              </span>
-            </div>
-
-            <h3 class="text-sm font-bold text-white tracking-tight leading-tight">${c.name}</h3>
-            <p class="text-[10px] text-slate-400 truncate mt-1">${artistsSummary}</p>
-          </div>
-
-          <div class="space-y-1.5 min-h-[50px] flex flex-col justify-center">
-            ${count && track1 ? `
-              <div class="flex items-center justify-between text-[11px] text-slate-300">
-                <span class="truncate max-w-[130px] font-medium">\${track1.name}</span>
-                <span class="text-[10px] text-slate-500 font-mono">126 BPM · 8A</span>
-              </div>
-              \${track2 ? `
-              <div class="flex items-center justify-between text-[11px] text-slate-300">
-                <span class="truncate max-w-[130px] font-medium">${track2.name}</span>
-                <span class="text-[10px] text-slate-500 font-mono">124 BPM · 2A</span>
-              </div>` : ''}
-            ` : `
-              <p class="text-[11px] text-slate-600 italic">Crate empty</p>
-            `}
-          </div>
-
-          <div class="flex items-center gap-2 pt-2 border-t border-deck-border/60">
-            <button onclick="openCrateDrawer('${c.id}')" class="touch-press flex-1 py-1.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-deck-border text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 transition">
-              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-              View Crate
-            </button>
-            <button onclick="exportSingleCrate('${c.id}')" title="Export to Spotify" class="touch-press p-1.5 px-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-deck-border text-slate-300 text-xs font-bold transition">
-              +
-            </button>
-          </div>
-        `;
-        grid.appendChild(card);
-      });
-    }
-
-    function toggleSelect(id, val) {
-      if (crateStore[id]) crateStore[id].selected = val;
-    }
-
-    function toggleSelectAll(val) {
-      DJ_CRATES.forEach(c => {
-        if (crateStore[c.id]) crateStore[c.id].selected = val;
-      });
-      renderCrates();
-    }
-
     function openCrateDrawer(id) {
       activeDrawerCrateId = id;
       const crate = crateStore[id];
@@ -579,22 +483,18 @@
         audio.src = track.preview_url;
         audio.play().catch(console.error);
       } else {
-        playBeep();
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.8);
+        } catch (e) {}
       }
-    }
-
-    function playBeep() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.8);
-      } catch (e) {}
     }
 
     function exportActiveDrawerCrate() {
@@ -673,6 +573,37 @@
         .replace(/=/g, '')
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
+    }
+
+    // Startup
+    try {
+      const savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
+      const input = document.getElementById('clientIdInput');
+      if (input) input.value = savedClientId;
+
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (code) {
+        history.replaceState(null, '', window.location.pathname);
+        exchangeCodeForToken(code);
+      }
+
+      const cached = localStorage.getItem(CACHED_CRATES_KEY);
+      if (cached) {
+        try {
+          crateStore = JSON.parse(cached);
+          renderCrates();
+          const badge = document.getElementById('librarySummaryBadge');
+          if (badge) badge.textContent = 'Library Restored from Cache';
+        } catch (e) {
+          initEmptyStore();
+        }
+      } else {
+        initEmptyStore();
+      }
+    } catch (err) {
+      console.error("Startup error handled:", err);
+      initEmptyStore();
     }
   </script>
 </body>
