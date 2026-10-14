@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Sort Liked Songs by Subgenres</title>
+  <title>TrackSort - Liked Songs Organizer</title>
   
-  <!-- Mobile & PWA Native App Meta -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TrackSort">
@@ -33,14 +32,13 @@
     }
   </script>
   <style>
-    /* Native App Feel & Safe Area Padding */
     :root {
       --sat: env(safe-area-inset-top, 0px);
       --sab: env(safe-area-inset-bottom, 0px);
     }
     body {
       padding-top: var(--sat);
-      padding-bottom: calc(var(--sab) + 76px);
+      padding-bottom: calc(var(--sab) + 85px);
       -webkit-tap-highlight-color: transparent;
       user-select: none;
       -webkit-user-select: none;
@@ -56,7 +54,6 @@
       background: #232733;
       border-radius: 9999px;
     }
-    /* Touch active state */
     .touch-press:active {
       transform: scale(0.97);
       opacity: 0.9;
@@ -75,7 +72,7 @@
       </div>
       <div>
         <h1 class="text-sm font-bold tracking-tight text-white leading-tight">TrackSort</h1>
-        <p class="text-[10px] text-slate-400">Sort Liked Songs by Subgenres</p>
+        <p class="text-[10px] text-slate-400">DJ Library & Subgenre Organizer</p>
       </div>
     </div>
 
@@ -140,12 +137,7 @@
 
     <!-- Mobile Crates Grid -->
     <div id="cratesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <!-- Empty placeholder state -->
-      <div class="col-span-full py-12 text-center text-slate-500 bg-brand-card/40 rounded-2xl border border-dashed border-brand-border p-6">
-        <svg class="w-10 h-10 mx-auto mb-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-        <p class="text-xs">No crates populated yet.</p>
-        <p class="text-[11px] text-slate-600 mt-1">Tap "Scan Liked Songs" or connect your Spotify account.</p>
-      </div>
+      <!-- Crates dynamically render here -->
     </div>
   </main>
 
@@ -153,7 +145,6 @@
   <div id="audioDeck" class="fixed bottom-0 left-0 right-0 z-40 bg-brand-card/95 backdrop-blur-md border-t border-brand-border px-4 py-2.5 pb-[calc(var(--sab)+10px)] transition-transform duration-300 translate-y-full">
     <div class="max-w-xl mx-auto flex items-center justify-between gap-3">
       
-      <!-- Track Thumbnail + Info -->
       <div class="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onclick="openCurrentTrackCrate()">
         <img id="deckCover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80" class="w-10 h-10 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="Cover">
         <div class="truncate">
@@ -162,7 +153,6 @@
         </div>
       </div>
 
-      <!-- Playback Controls -->
       <div class="flex items-center gap-3 flex-shrink-0">
         <button onclick="toggleAudioPlayback()" class="touch-press w-9 h-9 rounded-full bg-brand-green text-black flex items-center justify-center shadow-lg">
           <svg id="deckPlayIcon" class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -174,7 +164,6 @@
       </div>
     </div>
 
-    <!-- Scrubber -->
     <div class="max-w-xl mx-auto mt-2 flex items-center gap-2">
       <span id="deckCurrentTime" class="text-[9px] text-slate-400 font-mono">0:00</span>
       <input type="range" id="deckScrubber" min="0" max="30" value="0" step="0.1" oninput="seekPreview(this.value)" class="flex-1 h-1 bg-slate-800 rounded-lg appearance-none accent-brand-green">
@@ -182,11 +171,10 @@
     </div>
   </div>
 
-  <!-- Bottom Drawer: Crate Details (Mobile Native Sheet) -->
+  <!-- Bottom Drawer: Crate Details Sheet -->
   <div id="crateDrawerBackdrop" onclick="closeCrateDrawer()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
   <div id="crateDrawer" class="fixed inset-x-0 bottom-0 z-50 bg-[#161822] rounded-t-3xl border-t border-brand-border max-h-[85vh] flex flex-col translate-y-full transition-transform duration-300 pb-[calc(var(--sab)+12px)]">
     
-    <!-- Drawer Drag Indicator -->
     <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 flex-shrink-0 cursor-pointer" onclick="closeCrateDrawer()"></div>
     
     <div class="px-5 pb-3 border-b border-brand-border flex items-center justify-between flex-shrink-0">
@@ -200,10 +188,7 @@
       </button>
     </div>
 
-    <!-- Scrollable Track List -->
-    <div id="drawerTrackList" class="flex-1 overflow-y-auto px-4 py-2 space-y-1.5 custom-scrollbar">
-      <!-- Tracks dynamically injected here -->
-    </div>
+    <div id="drawerTrackList" class="flex-1 overflow-y-auto px-4 py-2 space-y-1.5 custom-scrollbar"></div>
   </div>
 
   <!-- Auth Settings Modal -->
@@ -216,11 +201,11 @@
         </button>
       </div>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Connect via Spotify OAuth PKCE. Enter your Client ID from the Spotify Developer Dashboard.
+        Connect via Spotify OAuth PKCE. Enter your 32-character Client ID from the Spotify Developer Dashboard.
       </p>
       <div>
         <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Spotify Client ID</label>
-        <input type="text" id="clientIdInput" placeholder="Paste Client ID..." class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+        <input type="text" id="clientIdInput" placeholder="Paste 32-character Client ID..." class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
       </div>
       <div class="pt-2 flex gap-2">
         <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2.5 bg-brand-green hover:bg-brand-hover text-black font-semibold text-xs rounded-xl shadow-lg transition">
@@ -235,82 +220,81 @@
 
   <audio id="mobileAudioPlayer" preload="auto" class="hidden"></audio>
 
-  <!-- Application Logic -->
   <script>
-    // Config & Hierarchical Taxonomies (Rap & Drill isolated with strict boundaries)
     const CLIENT_ID_KEY = 'tracksort_client_id';
     const CACHED_CRATES_KEY = 'tracksort_saved_crates';
-    const CACHED_TRACKS_KEY = 'tracksort_saved_raw_tracks';
-    const AUTH_STATE_KEY = 'tracksort_pkce_state';
     const CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
+    // Comprehensive subgenre taxonomies
     const SUBGENRE_DEFINITIONS = [
       {
         id: 'rap_hiphop',
         name: 'Rap, Hip-Hop & Trap',
         icon: '🎤',
-        regex: /\b(rap|hip hop|trap|boom bap|drill|east coast rap|west coast rap|gangsta rap)\b/i,
+        regex: /(rap|hip.?hop|trap|drill|grime|boom.?bap|phonk|pluggnb|cloud rap|gangsta|freestyle)/i,
         exclusions: []
       },
       {
         id: 'tech_house',
-        name: 'Tech & Rolling House',
+        name: 'Tech & Minimal House',
         icon: '🎧',
-        regex: /\b(tech house|minimal tech|deep tech|rolling house|club house)\b/i,
-        exclusions: ['hip hop', 'rap']
+        regex: /(tech house|minimal|deep tech|rolling house|bass house|groove room)/i,
+        exclusions: ['hip hop', 'trap']
       },
       {
         id: 'deep_melodic',
         name: 'Deep & Melodic House',
         icon: '🌊',
-        regex: /\b(deep house|melodic house|progressive house|organic house|afro house)\b/i,
-        exclusions: ['hip hop', 'rap']
+        regex: /(deep house|melodic house|progressive house|afro house|organic house|chill house|sunset house)/i,
+        exclusions: ['hip hop', 'trap']
       },
       {
-        id: 'rock_alt',
-        name: 'Rock & Alternative',
-        icon: '🎸',
-        regex: /\b(rock|indie rock|alternative rock|punk|grunge|garage rock)\b/i,
-        exclusions: ['rap', 'hip hop', 'trap', 'drill', 'r&b']
+        id: 'techno_electro',
+        name: 'Techno & Electro',
+        icon: '⚡',
+        regex: /(techno|electro|acid|industrial|dark techno|hard dance)/i,
+        exclusions: []
       },
       {
         id: 'rnb_soul',
-        name: 'R&B, Soul & Neo-Soul',
+        name: 'R&B, Soul & Funk',
         icon: '✨',
-        regex: /\b(r&b|contemporary r&b|soul|neo-soul|funk|quiet storm)\b/i,
+        regex: /(r&b|contemporary r&b|soul|neo-soul|funk|motown|groove)/i,
         exclusions: []
       },
       {
-        id: 'electronic_techno',
-        name: 'Techno & Electro',
-        icon: '⚡',
-        regex: /\b(techno|peak time techno|hard techno|electro|acid)\b/i,
-        exclusions: []
+        id: 'rock_indie',
+        name: 'Rock & Alternative',
+        icon: '🎸',
+        regex: /(rock|indie|alternative|punk|grunge|post-punk|metal)/i,
+        exclusions: ['rap', 'trap', 'hip hop']
       },
       {
-        id: 'pop_indie',
-        name: 'Pop & Modern Indie',
+        id: 'pop_dance',
+        name: 'Pop & Commercial Dance',
         icon: '🍭',
-        regex: /\b(pop|indie pop|synthpop|dance pop|electropop)\b/i,
-        exclusions: ['rap', 'drill']
+        regex: /(pop|dance pop|electropop|edm|club|synth-pop)/i,
+        exclusions: ['trap', 'drill']
+      },
+      {
+        id: 'other_tracks',
+        name: 'Eclectic & Unclassified',
+        icon: '💿',
+        regex: /.*/,
+        exclusions: []
       }
     ];
 
     let accessToken = null;
     let categorizedCrates = {};
-    let allTracksList = [];
     let activeDrawerCrateId = null;
-    let currentlyPlayingTrack = null;
-
     const audioPlayer = document.getElementById('mobileAudioPlayer');
 
-    // Startup Lifecycle
     window.addEventListener('DOMContentLoaded', async () => {
-      // 1. Populate saved Client ID
+      // 1. Recover Token or Code
       const savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
       document.getElementById('clientIdInput').value = savedClientId;
 
-      // 2. Handle PKCE Redirect Callback
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       if (code) {
@@ -318,7 +302,7 @@
         await exchangeCodeForToken(code);
       }
 
-      // 3. Load Persistent Cached Crates
+      // 2. Restore cached crates
       const cached = localStorage.getItem(CACHED_CRATES_KEY);
       if (cached) {
         try {
@@ -328,11 +312,12 @@
           document.getElementById('syncBadge').textContent = 'Cached';
           document.getElementById('syncBadge').classList.replace('text-slate-400', 'text-brand-green');
         } catch (e) {
-          console.error("Failed to parse cached crates", e);
+          initEmptyCrates();
         }
+      } else {
+        initEmptyCrates();
       }
 
-      // Audio Player Listeners
       audioPlayer.addEventListener('timeupdate', () => {
         if (!audioPlayer.duration) return;
         document.getElementById('deckScrubber').value = audioPlayer.currentTime;
@@ -344,35 +329,34 @@
       });
     });
 
-    // PKCE Authorization Flow
+    function initEmptyCrates() {
+      categorizedCrates = {};
+      SUBGENRE_DEFINITIONS.forEach(def => {
+        categorizedCrates[def.id] = { ...def, tracks: [], selected: true };
+      });
+      renderCrates();
+    }
+
     function getRedirectUri() {
       return window.location.origin + window.location.pathname;
     }
 
     function toggleAuthModal() {
-      const modal = document.getElementById('authModal');
-      modal.classList.toggle('hidden');
+      document.getElementById('authModal').classList.toggle('hidden');
     }
 
     async function saveAndAuthorize() {
       const clientId = document.getElementById('clientIdInput').value.trim() || '4c40070fe3c94db8e13c4bc587d6e7';
-      if (!clientId) {
-        alert("Please enter a valid Spotify Client ID.");
-        return;
-      }
       localStorage.setItem(CLIENT_ID_KEY, clientId);
 
       const verifier = generateRandomString(64);
       localStorage.setItem(CODE_VERIFIER_KEY, verifier);
       const challenge = await generateCodeChallenge(verifier);
 
-      const state = generateRandomString(16);
-      localStorage.setItem(AUTH_STATE_KEY, state);
-
       const scope = 'user-library-read playlist-modify-public playlist-modify-private';
       const redirectUri = getRedirectUri();
 
-      const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}&code_challenge_method=S256&code_challenge=${encodeURIComponent(challenge)}`;
+      const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${encodeURIComponent(challenge)}`;
 
       window.location.href = authUrl;
     }
@@ -399,11 +383,9 @@
         if (data.access_token) {
           accessToken = data.access_token;
           updateAuthUI(true);
-        } else {
-          console.error("Token exchange failed", data);
         }
       } catch (err) {
-        console.error("Auth error", err);
+        console.error("Token error", err);
       }
     }
 
@@ -420,12 +402,10 @@
     }
 
     function clearStoredAuth() {
-      localStorage.removeItem(CACHED_CRATES_KEY);
-      localStorage.removeItem(CACHED_TRACKS_KEY);
+      localStorage.clear();
       location.reload();
     }
 
-    // Scanning & Spotify API Pipeline
     async function startLibraryScan() {
       if (!accessToken) {
         toggleAuthModal();
@@ -438,7 +418,7 @@
       const progressStatusText = document.getElementById('progressStatusText');
       
       progressContainer.classList.remove('hidden');
-      progressStatusText.textContent = "Fetching liked tracks...";
+      progressStatusText.textContent = "Fetching all liked tracks...";
 
       try {
         let items = [];
@@ -449,19 +429,18 @@
           const res = await fetch(url, {
             headers: { 'Authorization': `Bearer ${accessToken}` }
           });
-          if (!res.ok) throw new Error("Spotify API fetch failed");
+          if (!res.ok) throw new Error("Spotify track fetch failed");
           const data = await res.json();
           total = data.total;
           items = items.concat(data.items);
           
-          const pct = Math.min(Math.round((items.length / total) * 100), 50);
+          const pct = Math.min(Math.round((items.length / total) * 50), 50);
           progressBar.style.width = `${pct}%`;
           progressPercentText.textContent = `${pct}%`;
           url = data.next;
         }
 
-        progressStatusText.textContent = "Resolving artist subgenres...";
-        // Artist catalog batching
+        progressStatusText.textContent = "Scanning artist subgenres...";
         const artistIds = [...new Set(items.flatMap(i => i.track?.artists?.map(a => a.id) || []))].filter(Boolean);
         const artistGenreMap = {};
 
@@ -481,18 +460,18 @@
           progressPercentText.textContent = `${pct}%`;
         }
 
-        // Categorize Tracks
-        categorizedCrates = {};
-        SUBGENRE_DEFINITIONS.forEach(def => {
-          categorizedCrates[def.id] = { ...def, tracks: [], selected: true };
-        });
+        // Initialize empty crates
+        initEmptyCrates();
 
+        // Categorize each track
         items.forEach(({ track }) => {
           if (!track || !track.id) return;
           const genres = track.artists?.flatMap(a => artistGenreMap[a.id] || []) || [];
           const genreStr = genres.join(' ').toLowerCase();
 
+          let matched = false;
           for (const def of SUBGENRE_DEFINITIONS) {
+            if (def.id === 'other_tracks') continue;
             const hasExclusion = def.exclusions?.some(ex => genreStr.includes(ex));
             if (!hasExclusion && def.regex.test(genreStr)) {
               categorizedCrates[def.id].tracks.push({
@@ -503,17 +482,29 @@
                 preview_url: track.preview_url,
                 image: track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
               });
+              matched = true;
               break;
             }
           }
+
+          // Fallback to Eclectic crate so zero songs are lost
+          if (!matched) {
+            categorizedCrates['other_tracks'].tracks.push({
+              id: track.id,
+              uri: `spotify:track:${track.id}`,
+              name: track.name,
+              artist: track.artists.map(a => a.name).join(', '),
+              preview_url: track.preview_url,
+              image: track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
+            });
+          }
         });
 
-        // Save to LocalStorage
         localStorage.setItem(CACHED_CRATES_KEY, JSON.stringify(categorizedCrates));
         
         progressBar.style.width = `100%`;
         progressPercentText.textContent = `100%`;
-        setTimeout(() => progressContainer.classList.add('hidden'), 800);
+        setTimeout(() => progressContainer.classList.add('hidden'), 600);
 
         document.getElementById('librarySummary').textContent = `${items.length} tracks organized`;
         document.getElementById('syncBadge').textContent = 'Synced';
@@ -523,12 +514,11 @@
 
       } catch (err) {
         console.error(err);
-        alert("Scan encountered an error. Check console and Spotify permissions.");
+        alert("Scan encountered an issue fetching artist genres. Try scanning again.");
         progressContainer.classList.add('hidden');
       }
     }
 
-    // Render Crates
     function renderCrates() {
       const grid = document.getElementById('cratesGrid');
       grid.innerHTML = '';
@@ -537,17 +527,15 @@
 
       keys.forEach(k => {
         const crate = categorizedCrates[k];
-        if (!crate.tracks.length) return;
-
         const card = document.createElement('div');
-        card.className = "bg-brand-card border border-brand-border rounded-2xl p-4 flex flex-col justify-between space-y-3 relative overflow-hidden";
+        card.className = "bg-brand-card border border-brand-border rounded-2xl p-4 flex flex-col justify-between space-y-3 relative";
         card.innerHTML = `
           <div class="flex items-start justify-between">
             <div class="flex items-center gap-2.5">
               <span class="text-2xl">${crate.icon || '📁'}</span>
               <div>
                 <h4 class="text-xs font-bold text-white leading-tight">${crate.name}</h4>
-                <p class="text-[11px] text-slate-400 mt-0.5">${crate.tracks.length} tracks</p>
+                <p class="text-[11px] ${crate.tracks.length ? 'text-brand-green font-semibold' : 'text-slate-500'} mt-0.5">${crate.tracks.length} tracks</p>
               </div>
             </div>
             <input type="checkbox" ${crate.selected ? 'checked' : ''} onchange="toggleCrateSelection('${k}', this.checked)" class="w-4 h-4 rounded accent-brand-green bg-slate-900 border-brand-border cursor-pointer">
@@ -579,9 +567,7 @@
       renderCrates();
     }
 
-    // Audio Player & Auditioning System
     function playTrackPreview(track) {
-      currentlyPlayingTrack = track;
       document.getElementById('deckTitle').textContent = track.name;
       document.getElementById('deckArtist').textContent = track.artist;
       document.getElementById('deckCover').src = track.image;
@@ -593,10 +579,9 @@
         audioPlayer.src = track.preview_url;
         audioPlayer.play().then(() => setDeckPlayState(true)).catch(console.error);
       } else {
-        // Synthesizer Web Audio fallback
         playSyntheticChime();
         setDeckPlayState(true);
-        setTimeout(() => setDeckPlayState(false), 3000);
+        setTimeout(() => setDeckPlayState(false), 2000);
       }
     }
 
@@ -639,7 +624,6 @@
       } catch (e) {}
     }
 
-    // Mobile Bottom Sheet Drawer
     function openCrateDrawer(crateId) {
       activeDrawerCrateId = crateId;
       const crate = categorizedCrates[crateId];
@@ -651,24 +635,28 @@
       const list = document.getElementById('drawerTrackList');
       list.innerHTML = '';
 
-      crate.tracks.forEach(track => {
-        const row = document.createElement('div');
-        row.className = "flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-brand-border hover:bg-slate-800 touch-press";
-        row.onclick = () => playTrackPreview(track);
-        row.innerHTML = `
-          <div class="flex items-center gap-3 overflow-hidden flex-1">
-            <img src="${track.image}" class="w-9 h-9 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="img">
-            <div class="truncate">
-              <p class="text-xs font-semibold text-white truncate leading-tight">${track.name}</p>
-              <p class="text-[10px] text-slate-400 truncate mt-0.5">${track.artist}</p>
+      if (!crate.tracks.length) {
+        list.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">No tracks in this crate.</p>';
+      } else {
+        crate.tracks.forEach(track => {
+          const row = document.createElement('div');
+          row.className = "flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-brand-border hover:bg-slate-800 touch-press cursor-pointer";
+          row.onclick = () => playTrackPreview(track);
+          row.innerHTML = `
+            <div class="flex items-center gap-3 overflow-hidden flex-1">
+              <img src="${track.image}" class="w-9 h-9 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="img">
+              <div class="truncate">
+                <p class="text-xs font-semibold text-white truncate leading-tight">${track.name}</p>
+                <p class="text-[10px] text-slate-400 truncate mt-0.5">${track.artist}</p>
+              </div>
             </div>
-          </div>
-          <button class="p-2 text-slate-400 hover:text-brand-green">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </button>
-        `;
-        list.appendChild(row);
-      });
+            <button class="p-2 text-slate-400 hover:text-brand-green">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+          `;
+          list.appendChild(row);
+        });
+      }
 
       document.getElementById('crateDrawerBackdrop').classList.remove('opacity-0', 'pointer-events-none');
       document.getElementById('crateDrawer').classList.remove('translate-y-full');
@@ -683,7 +671,6 @@
       if (activeDrawerCrateId) openCrateDrawer(activeDrawerCrateId);
     }
 
-    // Export & Batch Playlist Creation (Fixing Empty Playlist Bug via Chunking)
     async function createPlaylistsFromSelection() {
       const selectedKeys = Object.keys(categorizedCrates).filter(k => categorizedCrates[k].selected && categorizedCrates[k].tracks.length);
       if (!selectedKeys.length) {
@@ -693,7 +680,7 @@
       for (const key of selectedKeys) {
         await exportSingleCrate(key);
       }
-      alert("All selected playlists were successfully generated on Spotify!");
+      alert("Selected playlists generated on Spotify!");
     }
 
     function exportSingleCrateFromDrawer() {
@@ -709,13 +696,11 @@
       if (!crate || !crate.tracks.length) return;
 
       try {
-        // 1. Get User Profile ID
         const userRes = await fetch('https://api.spotify.com/v1/me', {
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
         const user = await userRes.json();
 
-        // 2. Create Playlist Container
         const plRes = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
           method: 'POST',
           headers: {
@@ -724,13 +709,12 @@
           },
           body: JSON.stringify({
             name: `Liked - ${crate.name}`,
-            description: `Auto-generated by TrackSort.`,
+            description: `Sorted by TrackSort.`,
             public: false
           })
         });
         const playlist = await plRes.json();
 
-        // 3. Batch insert real track URIs (chunks of 50)
         const uris = crate.tracks.map(t => t.uri).filter(u => u.startsWith('spotify:track:'));
         for (let i = 0; i < uris.length; i += 50) {
           const chunk = uris.slice(i, i + 50);
@@ -744,12 +728,10 @@
           });
         }
       } catch (e) {
-        console.error("Failed to export playlist", e);
-        alert(`Failed to export ${crate.name}. Check your token.`);
+        console.error("Export error", e);
       }
     }
 
-    // Utilities
     function formatDuration(sec) {
       const m = Math.floor(sec / 60);
       const s = Math.floor(sec % 60);
@@ -759,9 +741,7 @@
     function generateRandomString(length) {
       const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let text = '';
-      for (let i = 0; i < length; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-      }
+      for (let i = 0; i < length; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
       return text;
     }
 
