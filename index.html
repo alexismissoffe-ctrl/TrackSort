@@ -56,7 +56,7 @@
 </head>
 <body class="text-slate-200 min-h-screen flex flex-col font-sans antialiased select-none">
 
-  <!-- DJ Deck Top Navigation Bar -->
+  <!-- DJ Deck Header -->
   <header class="sticky top-0 z-40 bg-deck-bg/95 backdrop-blur border-b border-deck-border px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
     <div class="flex items-center gap-3">
       <div class="w-9 h-9 rounded-xl bg-deck-green/20 border border-deck-green/30 flex items-center justify-center text-deck-green shadow-lg">
@@ -127,7 +127,7 @@
     <div id="crateGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
   </main>
 
-  <!-- Slide-up Track Crate Drawer -->
+  <!-- Drawer View -->
   <div id="crateDrawerBackdrop" onclick="closeCrateDrawer()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
   <div id="crateDrawer" class="fixed inset-x-0 bottom-0 z-50 bg-[#12141c] rounded-t-3xl border-t border-deck-border max-h-[85vh] flex flex-col translate-y-full transition-transform duration-300 pb-[calc(var(--sab)+12px)] max-w-3xl mx-auto">
     <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 flex-shrink-0 cursor-pointer" onclick="closeCrateDrawer()"></div>
@@ -146,7 +146,7 @@
     <div id="drawerTrackList" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar"></div>
   </div>
 
-  <!-- Connect Modal -->
+  <!-- Auth Modal -->
   <div id="authModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-deck-card w-full max-w-md rounded-2xl border border-deck-border p-6 space-y-4">
       <div class="flex items-center justify-between">
@@ -177,22 +177,96 @@
 
   <script>
     var CLIENT_ID_KEY = 'tracksort_client_id';
-    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v4';
+    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v5';
     var CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
+    // Flexible Subgenre Definitions with broader matching and keyword fallbacks
     var DJ_CRATES = [
-      { id: 'hiphop_rap', name: 'Hip-Hop / Rap', color: '#f59e0b', regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle)/i, exclusions: ['house', 'techno'] },
-      { id: 'tech_rolling', name: 'Tech & Rolling House', color: '#10b981', regex: /(tech house|rolling house|bass house|deep tech|groove room)/i, exclusions: ['hip hop', 'trap', 'drill'] },
-      { id: 'funky_groovy', name: 'Funky & Groovy House', color: '#f97316', regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house)/i, exclusions: ['techno', 'trap'] },
-      { id: 'deep_melodic', name: 'Deep & Melodic House', color: '#3b82f6', regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset)/i, exclusions: ['trap', 'drill'] },
-      { id: 'minimal_micro', name: 'Minimal & Microhouse', color: '#a855f7', regex: /(minimal house|microhouse|rominimal|minimal techno|micro house)/i, exclusions: ['hip hop', 'drill'] },
-      { id: 'afro_latin', name: 'Afro & Latin House', color: '#ec4899', regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro)/i, exclusions: [] },
-      { id: 'general_house', name: 'General House & Club', color: '#14b8a6', regex: /(house|club|electro house|dance)/i, exclusions: ['hip hop', 'rap', 'rock'] },
-      { id: 'techno_hardgroove', name: 'Techno & Hardgroove', color: '#ef4444', regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance)/i, exclusions: [] },
-      { id: 'ukg_dnb', name: 'UK Garage & DnB', color: '#06b6d4', regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat)/i, exclusions: [] },
-      { id: 'jazz_soul_acoustic', name: 'Jazz, Soul & Acoustic', color: '#6366f1', regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues)/i, exclusions: ['techno', 'drill'] },
-      { id: 'rock_alternative', name: 'Rock & Alternative', color: '#f97316', regex: /(rock|alternative|indie rock|punk|grunge|metal)/i, exclusions: ['hip hop', 'house'] },
-      { id: 'pop_dance', name: 'Pop & Dance', color: '#8b5cf6', regex: /(pop|dance pop|synth-pop|indie pop)/i, exclusions: ['drill', 'techno'] }
+      { 
+        id: 'tech_rolling', 
+        name: 'Tech & Rolling House', 
+        color: '#10b981', 
+        regex: /(tech house|rolling house|bass house|deep tech|groove room|minimal tech|club house|stussy|anotr|pawsa|chris stussy)/i, 
+        exclusions: ['hip hop', 'trap', 'drill'] 
+      },
+      { 
+        id: 'deep_melodic', 
+        name: 'Deep & Melodic House', 
+        color: '#3b82f6', 
+        regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset|chill house|tropical house)/i, 
+        exclusions: ['trap', 'drill'] 
+      },
+      { 
+        id: 'funky_groovy', 
+        name: 'Funky & Groovy House', 
+        color: '#f97316', 
+        regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house|midland|shouse|franky rizardo)/i, 
+        exclusions: ['techno', 'trap'] 
+      },
+      { 
+        id: 'minimal_micro', 
+        name: 'Minimal & Microhouse', 
+        color: '#a855f7', 
+        regex: /(minimal|microhouse|rominimal|micro house|minimal techno)/i, 
+        exclusions: ['hip hop', 'drill'] 
+      },
+      { 
+        id: 'hiphop_rap', 
+        name: 'Hip-Hop / Rap', 
+        color: '#f59e0b', 
+        regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle|grime|french rap|rap francais)/i, 
+        exclusions: ['house', 'techno'] 
+      },
+      { 
+        id: 'techno_hardgroove', 
+        name: 'Techno & Hardgroove', 
+        color: '#ef4444', 
+        regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance|rave)/i, 
+        exclusions: [] 
+      },
+      { 
+        id: 'afro_latin', 
+        name: 'Afro & Latin House', 
+        color: '#ec4899', 
+        regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro|reggaeton)/i, 
+        exclusions: [] 
+      },
+      { 
+        id: 'ukg_dnb', 
+        name: 'UK Garage & DnB', 
+        color: '#06b6d4', 
+        regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat|bassline)/i, 
+        exclusions: [] 
+      },
+      { 
+        id: 'jazz_soul_acoustic', 
+        name: 'Jazz, Soul & Acoustic', 
+        color: '#6366f1', 
+        regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues|ambient|downtempo)/i, 
+        exclusions: ['techno', 'drill'] 
+      },
+      { 
+        id: 'rock_alternative', 
+        name: 'Rock & Alternative', 
+        color: '#f97316', 
+        regex: /(rock|alternative|indie rock|punk|grunge|metal|garage rock)/i, 
+        exclusions: ['hip hop', 'house'] 
+      },
+      { 
+        id: 'pop_dance', 
+        name: 'Pop & Dance', 
+        color: '#8b5cf6', 
+        regex: /(pop|dance pop|synth-pop|indie pop|electropop|europop)/i, 
+        exclusions: ['drill', 'techno'] 
+      },
+      { 
+        id: 'general_house', 
+        name: 'General House & Club', 
+        color: '#14b8a6', 
+        // Catch-all regex: will pick up electronic tracks and any remaining songs
+        regex: /.*/, 
+        exclusions: [] 
+      }
     ];
 
     var accessToken = null;
@@ -201,9 +275,7 @@
 
     function toggleAuthModal() {
       var modal = document.getElementById('authModal');
-      if (modal) {
-        modal.classList.toggle('hidden');
-      }
+      if (modal) modal.classList.toggle('hidden');
     }
 
     function initEmptyStore() {
@@ -356,6 +428,10 @@
       location.reload();
     }
 
+    function sleep(ms) {
+      return new Promise(function(resolve) { setTimeout(resolve, ms); });
+    }
+
     async function startLibraryScan() {
       if (!accessToken) {
         toggleAuthModal();
@@ -379,8 +455,8 @@
           var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + accessToken } });
           if (!res.ok) throw new Error("Spotify track fetch failed");
           var data = await res.json();
-          total = data.total;
-          items = items.concat(data.items);
+          total = data.total || total;
+          items = items.concat(data.items || []);
           
           var pct = Math.min(Math.round((items.length / total) * 50), 50);
           progressBar.style.width = pct + '%';
@@ -388,7 +464,7 @@
           url = data.next;
         }
 
-        progressStatus.textContent = "Resolving subgenres from artist profiles...";
+        progressStatus.textContent = "Analyzing artist metadata & subgenres...";
         var artistIds = [];
         for (var i = 0; i < items.length; i++) {
           var track = items[i].track;
@@ -403,54 +479,63 @@
         var artistGenreMap = {};
         for (var b = 0; b < artistIds.length; b += 50) {
           var batch = artistIds.slice(b, b + 50);
-          var aRes = await fetch('https://api.spotify.com/v1/artists?ids=' + batch.join(','), {
-            headers: { 'Authorization': 'Bearer ' + accessToken }
-          });
-          if (aRes.ok) {
-            var aData = await aRes.json();
-            if (aData.artists) {
-              for (var k = 0; k < aData.artists.length; k++) {
-                var art = aData.artists[k];
-                if (art) artistGenreMap[art.id] = art.genres || [];
+          try {
+            var aRes = await fetch('https://api.spotify.com/v1/artists?ids=' + batch.join(','), {
+              headers: { 'Authorization': 'Bearer ' + accessToken }
+            });
+            if (aRes.ok) {
+              var aData = await aRes.json();
+              if (aData.artists) {
+                for (var k = 0; k < aData.artists.length; k++) {
+                  var art = aData.artists[k];
+                  if (art) artistGenreMap[art.id] = art.genres || [];
+                }
               }
             }
+          } catch (e) {
+            console.warn("Artist batch error, falling back to track metadata", e);
           }
           var pctBatch = 50 + Math.min(Math.round((b / artistIds.length) * 48), 48);
           progressBar.style.width = pctBatch + '%';
           progressPct.textContent = pctBatch + '%';
+          await sleep(50); // prevent 429 rate limiting
         }
 
         initEmptyStore();
 
+        // Categorize each track using artist genres + song title keywords
         for (var j = 0; j < items.length; j++) {
           var t = items[j].track;
           if (!t || !t.id) continue;
 
-          var trackGenres = [];
+          var genreTokens = [];
+          var artNames = [];
           if (t.artists) {
             for (var artIdx = 0; artIdx < t.artists.length; artIdx++) {
-              var gList = artistGenreMap[t.artists[artIdx].id] || [];
-              trackGenres = trackGenres.concat(gList);
+              var artObj = t.artists[artIdx];
+              artNames.push(artObj.name);
+              var gList = artistGenreMap[artObj.id] || [];
+              genreTokens = genreTokens.concat(gList);
+              genreTokens.push(artObj.name.toLowerCase());
             }
           }
-          var genreStr = trackGenres.join(' ').toLowerCase();
+          if (t.name) genreTokens.push(t.name.toLowerCase());
+
+          var combinedSearchStr = genreTokens.join(' ').toLowerCase();
+          var matched = false;
 
           for (var cIdx = 0; cIdx < DJ_CRATES.length; cIdx++) {
             var def = DJ_CRATES[cIdx];
             var excluded = false;
             if (def.exclusions) {
               for (var ex = 0; ex < def.exclusions.length; ex++) {
-                if (genreStr.indexOf(def.exclusions[ex]) !== -1) {
+                if (combinedSearchStr.indexOf(def.exclusions[ex]) !== -1) {
                   excluded = true;
                   break;
                 }
               }
             }
-            if (!excluded && def.regex.test(genreStr)) {
-              var artNames = [];
-              if (t.artists) {
-                for (var an = 0; an < t.artists.length; an++) artNames.push(t.artists[an].name);
-              }
+            if (!excluded && def.regex.test(combinedSearchStr)) {
               crateStore[def.id].tracks.push({
                 id: t.id,
                 uri: 'spotify:track:' + t.id,
@@ -459,8 +544,21 @@
                 preview_url: t.preview_url,
                 image: (t.album && t.album.images && t.album.images[0] && t.album.images[0].url) || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
               });
+              matched = true;
               break;
             }
+          }
+
+          // Fallback to General House & Club if no strict subgenre was detected
+          if (!matched) {
+            crateStore['general_house'].tracks.push({
+              id: t.id,
+              uri: 'spotify:track:' + t.id,
+              name: t.name,
+              artist: artNames.join(', '),
+              preview_url: t.preview_url,
+              image: (t.album && t.album.images && t.album.images[0] && t.album.images[0].url) || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
+            });
           }
         }
 
@@ -612,8 +710,10 @@
             body: JSON.stringify({ uris: chunk })
           });
         }
+        alert('Playlist created for ' + crate.name + ' with ' + uris.length + ' tracks!');
       } catch (e) {
         console.error("Export error", e);
+        alert('Error exporting playlist for ' + crate.name);
       }
     }
 
@@ -634,7 +734,7 @@
         .replace(/\//g, '_');
     }
 
-    // Safe Startup Execution
+    // Startup
     window.addEventListener('DOMContentLoaded', function() {
       try {
         var savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
