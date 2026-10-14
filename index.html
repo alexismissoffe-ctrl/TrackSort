@@ -3,14 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>TrackSort - Liked Songs Organizer</title>
-  
+  <title>TRACKSORT - Subgenre Sorter</title>
+
+  <!-- PWA & Mobile Standalone Settings -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TrackSort">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="theme-color" content="#0a0b0e">
-  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3845/3845823.png">
+  <meta name="theme-color" content="#0d0e12">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -18,13 +17,13 @@
       theme: {
         extend: {
           colors: {
-            brand: {
-              green: '#1DB954',
-              hover: '#1ed760',
-              dark: '#0a0b0e',
-              card: '#14161d',
-              border: '#232733',
-              accent: '#3b82f6'
+            deck: {
+              bg: '#0c0d12',
+              card: '#13151c',
+              border: '#1f2330',
+              borderHover: '#2d3345',
+              subtle: '#8a91a5',
+              green: '#1ed760'
             }
           }
         }
@@ -37,15 +36,14 @@
       --sab: env(safe-area-inset-bottom, 0px);
     }
     body {
+      background-color: #0c0d12;
       padding-top: var(--sat);
-      padding-bottom: calc(var(--sab) + 85px);
+      padding-bottom: calc(var(--sab) + 30px);
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      -webkit-user-select: none;
       touch-action: manipulation;
     }
-    input, button {
-      user-select: auto;
+    .touch-press:active {
+      transform: scale(0.97);
     }
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
@@ -54,247 +52,238 @@
       background: #232733;
       border-radius: 9999px;
     }
-    .touch-press:active {
-      transform: scale(0.97);
-      opacity: 0.9;
-    }
   </style>
 </head>
-<body class="bg-brand-dark text-slate-100 min-h-screen flex flex-col font-sans antialiased overflow-x-hidden">
+<body class="text-slate-200 min-h-screen flex flex-col font-sans antialiased select-none">
 
-  <!-- Mobile Top Navigation Header -->
-  <header class="sticky top-0 z-40 bg-brand-dark/95 backdrop-blur border-b border-brand-border px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-brand-green to-emerald-400 flex items-center justify-center shadow-lg shadow-brand-green/20">
-        <svg class="w-5 h-5 text-black" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.65 14.65c-.2.3-.6.4-.9.2-2.4-1.5-5.5-1.8-9.1-1-.4.1-.7-.2-.8-.5-.1-.4.2-.7.5-.8 4-.9 7.4-.5 10.1 1.2.3.2.4.6.2.9zm1.3-2.9c-.3.4-.8.5-1.2.3-3-1.8-7.5-2.4-11-1.3-.5.1-1-.2-1.1-.6-.1-.5.2-1 .6-1.1 4.1-1.2 9.1-.6 12.4 1.5.5.3.6.8.3 1.2zm.1-3C14.5 8.9 8.2 8.7 4.8 9.7c-.6.2-1.2-.2-1.4-.7-.2-.6.2-1.2.7-1.4 4-1.2 10.9-1 15 1.5.5.3.7 1 .4 1.5-.2.5-.9.7-1.5.4z"/>
+  <!-- DJ Deck Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-deck-bg/95 backdrop-blur border-b border-deck-border px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
+    <!-- Brand Title -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-deck-green/20 border border-deck-green/30 flex items-center justify-center text-deck-green shadow-lg">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/>
+          <circle cx="12" cy="12" r="3" fill="currentColor"/>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
       <div>
-        <h1 class="text-sm font-bold tracking-tight text-white leading-tight">TrackSort</h1>
-        <p class="text-[10px] text-slate-400">DJ Library & Subgenre Organizer</p>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-black tracking-wider text-white uppercase leading-none">TRACKSORT</h1>
+          <span class="text-[9px] font-mono tracking-widest uppercase bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded border border-slate-700">SUBGENRE SORTER</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-0.5">Sort Liked Songs by Subgenres</p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2">
-      <button id="authBtn" onclick="toggleAuthModal()" class="touch-press px-3 py-1.5 rounded-full text-xs font-semibold bg-brand-green text-black hover:bg-brand-hover shadow-md flex items-center gap-1.5 transition">
-        <span id="authBtnDot" class="w-2 h-2 rounded-full bg-black/40"></span>
-        <span id="authBtnText">Connect</span>
+    <!-- Platform Selector & Sync Actions -->
+    <div class="flex items-center flex-wrap gap-2.5">
+      <div class="flex bg-slate-900 border border-deck-border rounded-xl p-0.5 text-xs font-semibold">
+        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-deck-green text-black shadow">
+          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.65 14.65c-.2.3-.6.4-.9.2-2.4-1.5-5.5-1.8-9.1-1-.4.1-.7-.2-.8-.5-.1-.4.2-.7.5-.8 4-.9 7.4-.5 10.1 1.2.3.2.4.6.2.9zm1.3-2.9c-.3.4-.8.5-1.2.3-3-1.8-7.5-2.4-11-1.3-.5.1-1-.2-1.1-.6-.1-.5.2-1 .6-1.1 4.1-1.2 9.1-.6 12.4 1.5.5.3.6.8.3 1.2zm.1-3C14.5 8.9 8.2 8.7 4.8 9.7c-.6.2-1.2-.2-1.4-.7-.2-.6.2-1.2.7-1.4 4-1.2 10.9-1 15 1.5.5.3.7 1 .4 1.5-.2.5-.9.7-1.5.4z"/></svg>
+          Spotify
+        </button>
+        <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 opacity-60 cursor-not-allowed">
+          SoundCloud
+        </button>
+      </div>
+
+      <button id="scanBtn" onclick="startLibraryScan()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-deck-border text-xs font-semibold text-white flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-deck-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span id="scanBtnText">Scan Library</span>
+      </button>
+
+      <button id="authBtn" onclick="toggleAuthModal()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-900 border border-deck-border text-xs font-semibold text-white hover:border-slate-600 flex items-center gap-2">
+        <span id="authDot" class="w-2 h-2 rounded-full bg-red-500"></span>
+        <span id="authText">Connect Spotify</span>
       </button>
     </div>
   </header>
 
-  <!-- Main Scrollable Screen -->
-  <main class="flex-1 px-4 py-4 max-w-xl mx-auto w-full space-y-4">
-    
-    <!-- Action Status / Control Card -->
-    <div class="bg-brand-card border border-brand-border rounded-2xl p-4 shadow-sm">
-      <div class="flex items-center justify-between mb-3">
-        <div>
-          <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-400">Spotify Library</h2>
-          <p id="librarySummary" class="text-sm font-bold text-white mt-0.5">Ready to scan</p>
-        </div>
-        <span id="syncBadge" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-mono">Offline</span>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="grid grid-cols-2 gap-2">
-        <button id="scanBtn" onclick="startLibraryScan()" class="touch-press flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-brand-green text-black font-semibold text-xs transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          Scan Liked Songs
-        </button>
-
-        <button id="createSelectedBtn" onclick="createPlaylistsFromSelection()" class="touch-press flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs border border-brand-border transition">
-          <svg class="w-4 h-4 text-brand-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-          Export Crates
-        </button>
-      </div>
-
-      <!-- Progress bar -->
-      <div id="progressContainer" class="hidden mt-3">
-        <div class="flex justify-between text-[11px] text-slate-400 mb-1">
-          <span id="progressStatusText">Scanning tracks...</span>
-          <span id="progressPercentText">0%</span>
-        </div>
-        <div class="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-          <div id="progressBar" class="bg-brand-green h-1.5 rounded-full transition-all duration-200" style="width: 0%"></div>
-        </div>
-      </div>
+  <!-- Progress Bar Overlay (during library scan) -->
+  <div id="progressContainer" class="hidden bg-slate-900 border-b border-deck-border px-4 py-2">
+    <div class="max-w-7xl mx-auto flex items-center justify-between text-xs text-slate-400 mb-1">
+      <span id="progressStatus">Reading liked tracks...</span>
+      <span id="progressPct" class="font-mono text-deck-green font-bold">0%</span>
     </div>
-
-    <!-- Crate Selection Bar -->
-    <div class="flex items-center justify-between px-1">
-      <div class="flex items-center gap-2">
-        <h3 class="text-sm font-bold text-slate-200">Subgenre Crates</h3>
-        <span id="crateCountBadge" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">0</span>
-      </div>
-      <div class="flex items-center gap-3 text-xs">
-        <button onclick="toggleSelectAll(true)" class="text-brand-green font-medium">Select All</button>
-        <span class="text-slate-600">|</span>
-        <button onclick="toggleSelectAll(false)" class="text-slate-400">Deselect</button>
-      </div>
-    </div>
-
-    <!-- Mobile Crates Grid -->
-    <div id="cratesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <!-- Crates dynamically render here -->
-    </div>
-  </main>
-
-  <!-- Mobile Bottom Sticky Audio Deck Player -->
-  <div id="audioDeck" class="fixed bottom-0 left-0 right-0 z-40 bg-brand-card/95 backdrop-blur-md border-t border-brand-border px-4 py-2.5 pb-[calc(var(--sab)+10px)] transition-transform duration-300 translate-y-full">
-    <div class="max-w-xl mx-auto flex items-center justify-between gap-3">
-      
-      <div class="flex items-center gap-3 overflow-hidden flex-1 cursor-pointer" onclick="openCurrentTrackCrate()">
-        <img id="deckCover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80" class="w-10 h-10 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="Cover">
-        <div class="truncate">
-          <p id="deckTitle" class="text-xs font-bold text-white truncate leading-snug">Track Title</p>
-          <p id="deckArtist" class="text-[10px] text-slate-400 truncate leading-none mt-0.5">Artist Name</p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3 flex-shrink-0">
-        <button onclick="toggleAudioPlayback()" class="touch-press w-9 h-9 rounded-full bg-brand-green text-black flex items-center justify-center shadow-lg">
-          <svg id="deckPlayIcon" class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg id="deckPauseIcon" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-        </button>
-        <button onclick="closeAudioDeck()" class="touch-press p-1 text-slate-400 hover:text-white">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="max-w-xl mx-auto mt-2 flex items-center gap-2">
-      <span id="deckCurrentTime" class="text-[9px] text-slate-400 font-mono">0:00</span>
-      <input type="range" id="deckScrubber" min="0" max="30" value="0" step="0.1" oninput="seekPreview(this.value)" class="flex-1 h-1 bg-slate-800 rounded-lg appearance-none accent-brand-green">
-      <span id="deckDuration" class="text-[9px] text-slate-400 font-mono">0:30</span>
+    <div class="max-w-7xl mx-auto w-full bg-slate-800 rounded-full h-1 overflow-hidden">
+      <div id="progressBar" class="bg-deck-green h-full rounded-full transition-all duration-200" style="width: 0%"></div>
     </div>
   </div>
 
-  <!-- Bottom Drawer: Crate Details Sheet -->
-  <div id="crateDrawerBackdrop" onclick="closeCrateDrawer()" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
-  <div id="crateDrawer" class="fixed inset-x-0 bottom-0 z-50 bg-[#161822] rounded-t-3xl border-t border-brand-border max-h-[85vh] flex flex-col translate-y-full transition-transform duration-300 pb-[calc(var(--sab)+12px)]">
-    
+  <!-- Main Crate Grid -->
+  <main class="flex-1 px-4 lg:px-8 py-6 max-w-7xl mx-auto w-full space-y-4">
+    <!-- Batch Actions Subheader -->
+    <div class="flex items-center justify-between text-xs">
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">DJ Crate Deck</span>
+        <span id="librarySummaryBadge" class="bg-slate-900 border border-deck-border text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-mono">12 Crates Configured</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSelectAll(true)" class="text-deck-green font-medium">Select All</button>
+        <span class="text-slate-700">|</span>
+        <button onclick="toggleSelectAll(false)" class="text-slate-400">Deselect</button>
+        <button onclick="createAllSelectedPlaylists()" class="touch-press ml-2 px-3 py-1 bg-deck-green text-black font-bold rounded-lg text-[11px] shadow">Export Selected</button>
+      </div>
+    </div>
+
+    <!-- The 12 DJ Crate Cards Grid -->
+    <div id="crateGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- Crate cards dynamically injected here -->
+    </div>
+  </main>
+
+  <!-- Slide-up Track Crate Drawer (Mobile Native Sheet) -->
+  <div id="crateDrawerBackdrop" onclick="closeCrateDrawer()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <div id="crateDrawer" class="fixed inset-x-0 bottom-0 z-50 bg-[#12141c] rounded-t-3xl border-t border-deck-border max-h-[85vh] flex flex-col translate-y-full transition-transform duration-300 pb-[calc(var(--sab)+12px)] max-w-3xl mx-auto">
     <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 flex-shrink-0 cursor-pointer" onclick="closeCrateDrawer()"></div>
     
-    <div class="px-5 pb-3 border-b border-brand-border flex items-center justify-between flex-shrink-0">
+    <div class="px-5 pb-3 border-b border-deck-border flex items-center justify-between flex-shrink-0">
       <div>
         <h3 id="drawerCrateTitle" class="text-base font-bold text-white leading-tight">Crate Name</h3>
         <p id="drawerCrateSub" class="text-xs text-slate-400 mt-0.5">0 tracks</p>
       </div>
-      <button onclick="exportSingleCrateFromDrawer()" class="touch-press px-3 py-1.5 rounded-xl bg-brand-green text-black font-semibold text-xs flex items-center gap-1.5 shadow">
+      <button onclick="exportActiveDrawerCrate()" class="touch-press px-3 py-1.5 rounded-xl bg-deck-green text-black font-semibold text-xs flex items-center gap-1.5 shadow">
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        Create Playlist
+        Create Spotify Playlist
       </button>
     </div>
 
-    <div id="drawerTrackList" class="flex-1 overflow-y-auto px-4 py-2 space-y-1.5 custom-scrollbar"></div>
+    <div id="drawerTrackList" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 custom-scrollbar"></div>
   </div>
 
-  <!-- Auth Settings Modal -->
-  <div id="authModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
-    <div class="bg-brand-card w-full sm:max-w-md rounded-t-3xl sm:rounded-2xl border border-brand-border p-6 space-y-4 pb-[calc(var(--sab)+24px)] sm:pb-6">
+  <!-- Connect Modal -->
+  <div id="authModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-deck-card w-full max-w-md rounded-2xl border border-deck-border p-6 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-white">Connect Spotify</h3>
+        <h3 class="text-base font-bold text-white">Spotify Connection</h3>
         <button onclick="toggleAuthModal()" class="text-slate-400 hover:text-white p-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Connect via Spotify OAuth PKCE. Enter your 32-character Client ID from the Spotify Developer Dashboard.
+        Requires a Spotify Developer Client ID with your live URL configured as a Redirect URI.
       </p>
       <div>
-        <label class="block text-[11px] font-semibold text-slate-300 uppercase mb-1">Spotify Client ID</label>
-        <input type="text" id="clientIdInput" placeholder="Paste 32-character Client ID..." class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-brand-green">
+        <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Spotify Client ID</label>
+        <input type="text" id="clientIdInput" placeholder="Paste 32-character Client ID..." class="w-full bg-slate-900 border border-deck-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-deck-green">
       </div>
       <div class="pt-2 flex gap-2">
-        <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2.5 bg-brand-green hover:bg-brand-hover text-black font-semibold text-xs rounded-xl shadow-lg transition">
+        <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2 bg-deck-green text-black font-bold text-xs rounded-xl shadow transition">
           Authorize with Spotify
         </button>
-        <button onclick="clearStoredAuth()" class="touch-press px-3 py-2.5 bg-slate-800 text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-700">
+        <button onclick="clearStoredAuth()" class="touch-press px-3 py-2 bg-slate-800 text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-700">
           Reset
         </button>
       </div>
     </div>
   </div>
 
-  <audio id="mobileAudioPlayer" preload="auto" class="hidden"></audio>
+  <audio id="audioPlayer" preload="auto" class="hidden"></audio>
 
   <script>
     const CLIENT_ID_KEY = 'tracksort_client_id';
-    const CACHED_CRATES_KEY = 'tracksort_saved_crates';
+    const CACHED_CRATES_KEY = 'tracksort_saved_crates_v2';
     const CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
-    // Comprehensive subgenre taxonomies
-    const SUBGENRE_DEFINITIONS = [
+    // The 12 Crate Definitions exactly matching the layout & taxonomy in your screenshot
+    const DJ_CRATES = [
       {
-        id: 'rap_hiphop',
-        name: 'Rap, Hip-Hop & Trap',
-        icon: '🎤',
-        regex: /(rap|hip.?hop|trap|drill|grime|boom.?bap|phonk|pluggnb|cloud rap|gangsta|freestyle)/i,
-        exclusions: []
+        id: 'hiphop_rap',
+        name: 'Hip-Hop / Rap',
+        color: '#f59e0b', // Amber/Yellow
+        regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle)/i,
+        exclusions: ['house', 'techno']
       },
       {
-        id: 'tech_house',
-        name: 'Tech & Minimal House',
-        icon: '🎧',
-        regex: /(tech house|minimal|deep tech|rolling house|bass house|groove room)/i,
-        exclusions: ['hip hop', 'trap']
+        id: 'tech_rolling',
+        name: 'Tech & Rolling House',
+        color: '#10b981', // Emerald
+        regex: /(tech house|rolling house|bass house|deep tech|groove room)/i,
+        exclusions: ['hip hop', 'trap', 'drill']
+      },
+      {
+        id: 'funky_groovy',
+        name: 'Funky & Groovy House',
+        color: '#f97316', // Orange
+        regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house)/i,
+        exclusions: ['techno', 'trap']
       },
       {
         id: 'deep_melodic',
         name: 'Deep & Melodic House',
-        icon: '🌊',
-        regex: /(deep house|melodic house|progressive house|afro house|organic house|chill house|sunset house)/i,
-        exclusions: ['hip hop', 'trap']
-      },
-      {
-        id: 'techno_electro',
-        name: 'Techno & Electro',
-        icon: '⚡',
-        regex: /(techno|electro|acid|industrial|dark techno|hard dance)/i,
-        exclusions: []
-      },
-      {
-        id: 'rnb_soul',
-        name: 'R&B, Soul & Funk',
-        icon: '✨',
-        regex: /(r&b|contemporary r&b|soul|neo-soul|funk|motown|groove)/i,
-        exclusions: []
-      },
-      {
-        id: 'rock_indie',
-        name: 'Rock & Alternative',
-        icon: '🎸',
-        regex: /(rock|indie|alternative|punk|grunge|post-punk|metal)/i,
-        exclusions: ['rap', 'trap', 'hip hop']
-      },
-      {
-        id: 'pop_dance',
-        name: 'Pop & Commercial Dance',
-        icon: '🍭',
-        regex: /(pop|dance pop|electropop|edm|club|synth-pop)/i,
+        color: '#3b82f6', // Blue
+        regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset)/i,
         exclusions: ['trap', 'drill']
       },
       {
-        id: 'other_tracks',
-        name: 'Eclectic & Unclassified',
-        icon: '💿',
-        regex: /.*/,
+        id: 'minimal_micro',
+        name: 'Minimal & Microhouse',
+        color: '#a855f7', // Purple
+        regex: /(minimal house|microhouse|rominimal|minimal techno|micro house)/i,
+        exclusions: ['hip hop', 'drill']
+      },
+      {
+        id: 'afro_latin',
+        name: 'Afro & Latin House',
+        color: '#ec4899', // Pink
+        regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro)/i,
         exclusions: []
+      },
+      {
+        id: 'general_house',
+        name: 'General House & Club',
+        color: '#14b8a6', // Teal
+        regex: /(house|club|electro house|dance)/i,
+        exclusions: ['hip hop', 'rap', 'rock']
+      },
+      {
+        id: 'techno_hardgroove',
+        name: 'Techno & Hardgroove',
+        color: '#ef4444', // Red
+        regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance)/i,
+        exclusions: []
+      },
+      {
+        id: 'ukg_dnb',
+        name: 'UK Garage & DnB',
+        color: '#06b6d4', // Cyan
+        regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat)/i,
+        exclusions: []
+      },
+      {
+        id: 'jazz_soul_acoustic',
+        name: 'Jazz, Soul & Acoustic',
+        color: '#6366f1', // Indigo
+        regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues)/i,
+        exclusions: ['techno', 'drill']
+      },
+      {
+        id: 'rock_alternative',
+        name: 'Rock & Alternative',
+        color: '#f97316', // Light Orange
+        regex: /(rock|alternative|indie rock|punk|grunge|metal)/i,
+        exclusions: ['hip hop', 'house']
+      },
+      {
+        id: 'pop_dance',
+        name: 'Pop & Dance',
+        color: '#8b5cf6', // Violet
+        regex: /(pop|dance pop|synth-pop|indie pop)/i,
+        exclusions: ['drill', 'techno']
       }
     ];
 
     let accessToken = null;
-    let categorizedCrates = {};
+    let crateStore = {};
     let activeDrawerCrateId = null;
-    const audioPlayer = document.getElementById('mobileAudioPlayer');
+    const audio = document.getElementById('audioPlayer');
 
     window.addEventListener('DOMContentLoaded', async () => {
-      // 1. Recover Token or Code
       const savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
       document.getElementById('clientIdInput').value = savedClientId;
 
+      // Handle OAuth Redirect
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       if (code) {
@@ -302,47 +291,35 @@
         await exchangeCodeForToken(code);
       }
 
-      // 2. Restore cached crates
+      // Initialize empty or cached crates
       const cached = localStorage.getItem(CACHED_CRATES_KEY);
       if (cached) {
         try {
-          categorizedCrates = JSON.parse(cached);
+          crateStore = JSON.parse(cached);
           renderCrates();
-          document.getElementById('librarySummary').textContent = 'Library loaded from device cache';
-          document.getElementById('syncBadge').textContent = 'Cached';
-          document.getElementById('syncBadge').classList.replace('text-slate-400', 'text-brand-green');
+          document.getElementById('librarySummaryBadge').textContent = 'Library Restored from Cache';
         } catch (e) {
-          initEmptyCrates();
+          initEmptyStore();
         }
       } else {
-        initEmptyCrates();
+        initEmptyStore();
       }
-
-      audioPlayer.addEventListener('timeupdate', () => {
-        if (!audioPlayer.duration) return;
-        document.getElementById('deckScrubber').value = audioPlayer.currentTime;
-        document.getElementById('deckCurrentTime').textContent = formatDuration(audioPlayer.currentTime);
-      });
-
-      audioPlayer.addEventListener('ended', () => {
-        setDeckPlayState(false);
-      });
     });
 
-    function initEmptyCrates() {
-      categorizedCrates = {};
-      SUBGENRE_DEFINITIONS.forEach(def => {
-        categorizedCrates[def.id] = { ...def, tracks: [], selected: true };
+    function initEmptyStore() {
+      crateStore = {};
+      DJ_CRATES.forEach(c => {
+        crateStore[c.id] = { ...c, tracks: [], selected: true };
       });
       renderCrates();
     }
 
-    function getRedirectUri() {
-      return window.location.origin + window.location.pathname;
-    }
-
     function toggleAuthModal() {
       document.getElementById('authModal').classList.toggle('hidden');
+    }
+
+    function getRedirectUri() {
+      return window.location.origin + window.location.pathname;
     }
 
     async function saveAndAuthorize() {
@@ -356,9 +333,7 @@
       const scope = 'user-library-read playlist-modify-public playlist-modify-private';
       const redirectUri = getRedirectUri();
 
-      const authUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${encodeURIComponent(challenge)}`;
-
-      window.location.href = authUrl;
+      window.location.href = `https://accounts.spotify.com/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${encodeURIComponent(challenge)}`;
     }
 
     async function exchangeCodeForToken(code) {
@@ -378,26 +353,14 @@
             code_verifier: verifier
           })
         });
-
         const data = await res.json();
         if (data.access_token) {
           accessToken = data.access_token;
-          updateAuthUI(true);
+          document.getElementById('authDot').className = "w-2 h-2 rounded-full bg-deck-green";
+          document.getElementById('authText').textContent = "Connected";
         }
       } catch (err) {
         console.error("Token error", err);
-      }
-    }
-
-    function updateAuthUI(connected) {
-      const btn = document.getElementById('authBtn');
-      const dot = document.getElementById('authBtnDot');
-      const text = document.getElementById('authBtnText');
-      if (connected) {
-        btn.classList.replace('bg-brand-green', 'bg-slate-800');
-        btn.classList.add('text-white', 'border', 'border-brand-border');
-        dot.classList.replace('bg-black/40', 'bg-brand-green');
-        text.textContent = 'Connected';
       }
     }
 
@@ -406,6 +369,7 @@
       location.reload();
     }
 
+    // Spotify Scan Pipeline
     async function startLibraryScan() {
       if (!accessToken) {
         toggleAuthModal();
@@ -414,11 +378,11 @@
 
       const progressContainer = document.getElementById('progressContainer');
       const progressBar = document.getElementById('progressBar');
-      const progressPercentText = document.getElementById('progressPercentText');
-      const progressStatusText = document.getElementById('progressStatusText');
+      const progressPct = document.getElementById('progressPct');
+      const progressStatus = document.getElementById('progressStatus');
       
       progressContainer.classList.remove('hidden');
-      progressStatusText.textContent = "Fetching all liked tracks...";
+      progressStatus.textContent = "Fetching all liked tracks...";
 
       try {
         let items = [];
@@ -426,9 +390,7 @@
         let total = 0;
 
         while (url) {
-          const res = await fetch(url, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
-          });
+          const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
           if (!res.ok) throw new Error("Spotify track fetch failed");
           const data = await res.json();
           total = data.total;
@@ -436,11 +398,11 @@
           
           const pct = Math.min(Math.round((items.length / total) * 50), 50);
           progressBar.style.width = `${pct}%`;
-          progressPercentText.textContent = `${pct}%`;
+          progressPct.textContent = `${pct}%`;
           url = data.next;
         }
 
-        progressStatusText.textContent = "Scanning artist subgenres...";
+        progressStatus.textContent = "Resolving subgenres from artist profiles...";
         const artistIds = [...new Set(items.flatMap(i => i.track?.artists?.map(a => a.id) || []))].filter(Boolean);
         const artistGenreMap = {};
 
@@ -455,26 +417,22 @@
               if (a) artistGenreMap[a.id] = a.genres || [];
             });
           }
-          const pct = 50 + Math.min(Math.round((i / artistIds.length) * 45), 45);
+          const pct = 50 + Math.min(Math.round((i / artistIds.length) * 48), 48);
           progressBar.style.width = `${pct}%`;
-          progressPercentText.textContent = `${pct}%`;
+          progressPct.textContent = `${pct}%`;
         }
 
-        // Initialize empty crates
-        initEmptyCrates();
+        initEmptyStore();
 
-        // Categorize each track
         items.forEach(({ track }) => {
           if (!track || !track.id) return;
           const genres = track.artists?.flatMap(a => artistGenreMap[a.id] || []) || [];
           const genreStr = genres.join(' ').toLowerCase();
 
-          let matched = false;
-          for (const def of SUBGENRE_DEFINITIONS) {
-            if (def.id === 'other_tracks') continue;
+          for (const def of DJ_CRATES) {
             const hasExclusion = def.exclusions?.some(ex => genreStr.includes(ex));
             if (!hasExclusion && def.regex.test(genreStr)) {
-              categorizedCrates[def.id].tracks.push({
+              crateStore[def.id].tracks.push({
                 id: track.id,
                 uri: `spotify:track:${track.id}`,
                 name: track.name,
@@ -482,71 +440,87 @@
                 preview_url: track.preview_url,
                 image: track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
               });
-              matched = true;
               break;
             }
           }
-
-          // Fallback to Eclectic crate so zero songs are lost
-          if (!matched) {
-            categorizedCrates['other_tracks'].tracks.push({
-              id: track.id,
-              uri: `spotify:track:${track.id}`,
-              name: track.name,
-              artist: track.artists.map(a => a.name).join(', '),
-              preview_url: track.preview_url,
-              image: track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
-            });
-          }
         });
 
-        localStorage.setItem(CACHED_CRATES_KEY, JSON.stringify(categorizedCrates));
-        
+        localStorage.setItem(CACHED_CRATES_KEY, JSON.stringify(crateStore));
+
         progressBar.style.width = `100%`;
-        progressPercentText.textContent = `100%`;
-        setTimeout(() => progressContainer.classList.add('hidden'), 600);
+        progressPct.textContent = `100%`;
+        setTimeout(() => progressContainer.classList.add('hidden'), 500);
 
-        document.getElementById('librarySummary').textContent = `${items.length} tracks organized`;
-        document.getElementById('syncBadge').textContent = 'Synced';
-        document.getElementById('syncBadge').classList.replace('text-slate-400', 'text-brand-green');
-
+        document.getElementById('librarySummaryBadge').textContent = `${items.length} Liked Tracks Sorted`;
         renderCrates();
 
       } catch (err) {
         console.error(err);
-        alert("Scan encountered an issue fetching artist genres. Try scanning again.");
+        alert("Scan encountered an issue. Please try again.");
         progressContainer.classList.add('hidden');
       }
     }
 
+    // Render the exact aesthetic cards from your screenshot
     function renderCrates() {
-      const grid = document.getElementById('cratesGrid');
+      const grid = document.getElementById('crateGrid');
       grid.innerHTML = '';
-      const keys = Object.keys(categorizedCrates);
-      document.getElementById('crateCountBadge').textContent = keys.length;
 
-      keys.forEach(k => {
-        const crate = categorizedCrates[k];
+      DJ_CRATES.forEach(c => {
+        const crate = crateStore[c.id] || { ...c, tracks: [], selected: true };
+        const count = crate.tracks.length;
+        const track1 = crate.tracks[0];
+        const track2 = crate.tracks[1];
+
+        // Unique artist summary
+        const artistsSummary = crate.tracks.length 
+          ? [...new Set(crate.tracks.flatMap(t => t.artist.split(', ')))].slice(0, 4).join(', ')
+          : 'No tracks assigned';
+
         const card = document.createElement('div');
-        card.className = "bg-brand-card border border-brand-border rounded-2xl p-4 flex flex-col justify-between space-y-3 relative";
+        card.className = "bg-deck-card border border-deck-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-deck-borderHover transition-all";
         card.innerHTML = `
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-2.5">
-              <span class="text-2xl">${crate.icon || '📁'}</span>
-              <div>
-                <h4 class="text-xs font-bold text-white leading-tight">${crate.name}</h4>
-                <p class="text-[11px] ${crate.tracks.length ? 'text-brand-green font-semibold' : 'text-slate-500'} mt-0.5">${crate.tracks.length} tracks</p>
+          <!-- Card Header -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <input type="checkbox" ${crate.selected ? 'checked' : ''} onchange="toggleSelect('${c.id}', this.checked)" class="w-4 h-4 rounded accent-blue-500 bg-slate-900 border-deck-border cursor-pointer">
+                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${c.color}"></span>
               </div>
+              <span class="text-[10px] font-mono tracking-wider ${count ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-900'} px-2 py-0.5 rounded-md border border-slate-800">
+                ${count} Tracks
+              </span>
             </div>
-            <input type="checkbox" ${crate.selected ? 'checked' : ''} onchange="toggleCrateSelection('${k}', this.checked)" class="w-4 h-4 rounded accent-brand-green bg-slate-900 border-brand-border cursor-pointer">
+
+            <h3 class="text-sm font-bold text-white tracking-tight leading-tight">${c.name}</h3>
+            <p class="text-[10px] text-slate-400 truncate mt-1">${artistsSummary}</p>
           </div>
 
-          <div class="flex items-center gap-2 pt-1">
-            <button onclick="openCrateDrawer('${k}')" class="touch-press flex-1 py-1.5 px-3 rounded-lg bg-slate-800 text-[11px] font-medium text-slate-200 border border-brand-border hover:bg-slate-700">
-              Inspect & Audition
+          <!-- Track Rows or Empty state -->
+          <div class="space-y-1.5 min-h-[50px] flex flex-col justify-center">
+            ${count ? `
+              <div class="flex items-center justify-between text-[11px] text-slate-300">
+                <span class="truncate max-w-[130px] font-medium">\${track1.name}</span>
+                <span class="text-[10px] text-slate-500 font-mono">126 BPM · 8A</span>
+              </div>
+              \${track2 ? `
+              <div class="flex items-center justify-between text-[11px] text-slate-300">
+                <span class="truncate max-w-[130px] font-medium">${track2.name}</span>
+                <span class="text-[10px] text-slate-500 font-mono">124 BPM · 2A</span>
+              </div>` : ''}
+            ` : `
+              <p class="text-[11px] text-slate-600 italic">Crate empty</p>
+            `}
+          </div>
+
+          <!-- Bottom Actions -->
+          <div class="flex items-center gap-2 pt-2 border-t border-deck-border/60">
+            <button onclick="openCrateDrawer('${c.id}')" class="touch-press flex-1 py-1.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-deck-border text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 transition">
+              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+              View Crate
             </button>
-            <button onclick="exportSingleCrate('${k}')" class="touch-press p-1.5 rounded-lg bg-brand-green/10 text-brand-green border border-brand-green/20 hover:bg-brand-green/20">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <button onclick="exportSingleCrate('${c.id}')" title="Export to Spotify" class="touch-press p-1.5 px-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-deck-border text-slate-300 text-xs font-bold transition">
+              +
             </button>
           </div>
         `;
@@ -554,103 +528,45 @@
       });
     }
 
-    function toggleCrateSelection(crateId, selected) {
-      if (categorizedCrates[crateId]) {
-        categorizedCrates[crateId].selected = selected;
-      }
+    function toggleSelect(id, val) {
+      if (crateStore[id]) crateStore[id].selected = val;
     }
 
-    function toggleSelectAll(select) {
-      Object.keys(categorizedCrates).forEach(k => {
-        categorizedCrates[k].selected = select;
+    function toggleSelectAll(val) {
+      DJ_CRATES.forEach(c => {
+        if (crateStore[c.id]) crateStore[c.id].selected = val;
       });
       renderCrates();
     }
 
-    function playTrackPreview(track) {
-      document.getElementById('deckTitle').textContent = track.name;
-      document.getElementById('deckArtist').textContent = track.artist;
-      document.getElementById('deckCover').src = track.image;
-
-      const deck = document.getElementById('audioDeck');
-      deck.classList.remove('translate-y-full');
-
-      if (track.preview_url) {
-        audioPlayer.src = track.preview_url;
-        audioPlayer.play().then(() => setDeckPlayState(true)).catch(console.error);
-      } else {
-        playSyntheticChime();
-        setDeckPlayState(true);
-        setTimeout(() => setDeckPlayState(false), 2000);
-      }
-    }
-
-    function toggleAudioPlayback() {
-      if (audioPlayer.paused) {
-        audioPlayer.play();
-        setDeckPlayState(true);
-      } else {
-        audioPlayer.pause();
-        setDeckPlayState(false);
-      }
-    }
-
-    function setDeckPlayState(isPlaying) {
-      document.getElementById('deckPlayIcon').classList.toggle('hidden', isPlaying);
-      document.getElementById('deckPauseIcon').classList.toggle('hidden', !isPlaying);
-    }
-
-    function seekPreview(sec) {
-      audioPlayer.currentTime = sec;
-    }
-
-    function closeAudioDeck() {
-      audioPlayer.pause();
-      document.getElementById('audioDeck').classList.add('translate-y-full');
-    }
-
-    function playSyntheticChime() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 1.2);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 1.2);
-      } catch (e) {}
-    }
-
-    function openCrateDrawer(crateId) {
-      activeDrawerCrateId = crateId;
-      const crate = categorizedCrates[crateId];
+    // Drawer System
+    function openCrateDrawer(id) {
+      activeDrawerCrateId = id;
+      const crate = crateStore[id];
       if (!crate) return;
 
       document.getElementById('drawerCrateTitle').textContent = crate.name;
       document.getElementById('drawerCrateSub').textContent = `${crate.tracks.length} tracks`;
-      
+
       const list = document.getElementById('drawerTrackList');
       list.innerHTML = '';
 
       if (!crate.tracks.length) {
-        list.innerHTML = '<p class="text-xs text-slate-500 text-center py-8">No tracks in this crate.</p>';
+        list.innerHTML = '<p class="text-xs text-slate-500 text-center py-10 italic">No tracks categorized in this crate.</p>';
       } else {
         crate.tracks.forEach(track => {
           const row = document.createElement('div');
-          row.className = "flex items-center justify-between p-2 rounded-xl bg-slate-900/60 border border-brand-border hover:bg-slate-800 touch-press cursor-pointer";
-          row.onclick = () => playTrackPreview(track);
+          row.className = "flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-deck-border hover:border-slate-600 cursor-pointer touch-press";
+          row.onclick = () => playPreview(track);
           row.innerHTML = `
             <div class="flex items-center gap-3 overflow-hidden flex-1">
-              <img src="${track.image}" class="w-9 h-9 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="img">
+              <img src="${track.image}" class="w-9 h-9 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="art">
               <div class="truncate">
-                <p class="text-xs font-semibold text-white truncate leading-tight">${track.name}</p>
+                <p class="text-xs font-bold text-white truncate leading-tight">${track.name}</p>
                 <p class="text-[10px] text-slate-400 truncate mt-0.5">${track.artist}</p>
               </div>
             </div>
-            <button class="p-2 text-slate-400 hover:text-brand-green">
+            <button class="p-1 text-deck-green">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
             </button>
           `;
@@ -665,26 +581,47 @@
     function closeCrateDrawer() {
       document.getElementById('crateDrawerBackdrop').classList.add('opacity-0', 'pointer-events-none');
       document.getElementById('crateDrawer').classList.add('translate-y-full');
+      audio.pause();
     }
 
-    function openCurrentTrackCrate() {
-      if (activeDrawerCrateId) openCrateDrawer(activeDrawerCrateId);
+    function playPreview(track) {
+      if (track.preview_url) {
+        audio.src = track.preview_url;
+        audio.play().catch(console.error);
+      } else {
+        playBeep();
+      }
     }
 
-    async function createPlaylistsFromSelection() {
-      const selectedKeys = Object.keys(categorizedCrates).filter(k => categorizedCrates[k].selected && categorizedCrates[k].tracks.length);
-      if (!selectedKeys.length) {
-        alert("Please select at least one crate containing tracks.");
+    function playBeep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.frequency.setValueAtTime(440, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.8);
+      } catch (e) {}
+    }
+
+    // Export Playlists
+    function exportActiveDrawerCrate() {
+      if (activeDrawerCrateId) exportSingleCrate(activeDrawerCrateId);
+    }
+
+    async function createAllSelectedPlaylists() {
+      const selected = DJ_CRATES.filter(c => crateStore[c.id]?.selected && crateStore[c.id]?.tracks.length);
+      if (!selected.length) {
+        alert("Please select at least one crate that contains tracks.");
         return;
       }
-      for (const key of selectedKeys) {
-        await exportSingleCrate(key);
+      for (const c of selected) {
+        await exportSingleCrate(c.id);
       }
-      alert("Selected playlists generated on Spotify!");
-    }
-
-    function exportSingleCrateFromDrawer() {
-      if (activeDrawerCrateId) exportSingleCrate(activeDrawerCrateId);
+      alert("Selected crates exported to your Spotify account!");
     }
 
     async function exportSingleCrate(crateId) {
@@ -692,7 +629,7 @@
         toggleAuthModal();
         return;
       }
-      const crate = categorizedCrates[crateId];
+      const crate = crateStore[crateId];
       if (!crate || !crate.tracks.length) return;
 
       try {
@@ -709,16 +646,16 @@
           },
           body: JSON.stringify({
             name: `Liked - ${crate.name}`,
-            description: `Sorted by TrackSort.`,
+            description: `Generated by TrackSort DJ Crate Deck.`,
             public: false
           })
         });
-        const playlist = await plRes.json();
+        const pl = await plRes.json();
 
         const uris = crate.tracks.map(t => t.uri).filter(u => u.startsWith('spotify:track:'));
         for (let i = 0; i < uris.length; i += 50) {
           const chunk = uris.slice(i, i + 50);
-          await fetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+          await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/tracks`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${accessToken}`,
@@ -732,12 +669,7 @@
       }
     }
 
-    function formatDuration(sec) {
-      const m = Math.floor(sec / 60);
-      const s = Math.floor(sec % 60);
-      return `${m}:${s < 10 ? '0' : ''}${s}`;
-    }
-
+    // Auth Utilities
     function generateRandomString(length) {
       const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let text = '';
@@ -745,9 +677,9 @@
       return text;
     }
 
-    async function generateCodeChallenge(codeVerifier) {
+    async function generateCodeChallenge(verifier) {
       const encoder = new TextEncoder();
-      const data = encoder.encode(codeVerifier);
+      const data = encoder.encode(verifier);
       const digest = await window.crypto.subtle.digest('SHA-256', data);
       return btoa(String.fromCharCode(...new Uint8Array(digest)))
         .replace(/=/g, '')
