@@ -5,11 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>TRACKSORT - Subgenre Sorter</title>
 
-  <!-- PWA & Mobile Standalone Settings -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TrackSort">
-  <meta name="theme-color" content="#0d0e12">
+  <meta name="theme-color" content="#0c0d12">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -58,7 +57,6 @@
 
   <!-- DJ Deck Top Navigation Bar -->
   <header class="sticky top-0 z-40 bg-deck-bg/95 backdrop-blur border-b border-deck-border px-4 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-3">
-    <!-- Brand Title -->
     <div class="flex items-center gap-3">
       <div class="w-9 h-9 rounded-xl bg-deck-green/20 border border-deck-green/30 flex items-center justify-center text-deck-green shadow-lg">
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -76,7 +74,6 @@
       </div>
     </div>
 
-    <!-- Platform Selector & Sync Actions -->
     <div class="flex items-center flex-wrap gap-2.5">
       <div class="flex bg-slate-900 border border-deck-border rounded-xl p-0.5 text-xs font-semibold">
         <button class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-deck-green text-black shadow">
@@ -100,7 +97,7 @@
     </div>
   </header>
 
-  <!-- Progress Bar Overlay (during library scan) -->
+  <!-- Progress Bar Overlay -->
   <div id="progressContainer" class="hidden bg-slate-900 border-b border-deck-border px-4 py-2">
     <div class="max-w-7xl mx-auto flex items-center justify-between text-xs text-slate-400 mb-1">
       <span id="progressStatus">Reading liked tracks...</span>
@@ -113,7 +110,6 @@
 
   <!-- Main Crate Grid -->
   <main class="flex-1 px-4 lg:px-8 py-6 max-w-7xl mx-auto w-full space-y-4">
-    <!-- Batch Actions Subheader -->
     <div class="flex items-center justify-between text-xs">
       <div class="flex items-center gap-2">
         <span class="text-slate-400 font-semibold uppercase tracking-wider text-[11px]">DJ Crate Deck</span>
@@ -127,13 +123,10 @@
       </div>
     </div>
 
-    <!-- The 12 DJ Crate Cards Grid -->
-    <div id="crateGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <!-- Crate cards dynamically injected here -->
-    </div>
+    <div id="crateGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
   </main>
 
-  <!-- Slide-up Track Crate Drawer (Mobile Native Sheet) -->
+  <!-- Slide-up Track Crate Drawer -->
   <div id="crateDrawerBackdrop" onclick="closeCrateDrawer()" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 opacity-0 pointer-events-none transition-opacity duration-300"></div>
   <div id="crateDrawer" class="fixed inset-x-0 bottom-0 z-50 bg-[#12141c] rounded-t-3xl border-t border-deck-border max-h-[85vh] flex flex-col translate-y-full transition-transform duration-300 pb-[calc(var(--sab)+12px)] max-w-3xl mx-auto">
     <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto my-3 flex-shrink-0 cursor-pointer" onclick="closeCrateDrawer()"></div>
@@ -162,11 +155,11 @@
         </button>
       </div>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Requires a Spotify Developer Client ID with your live URL configured as a Redirect URI.
+        Authorize access with Spotify OAuth PKCE to read liked tracks and create crates.
       </p>
       <div>
         <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Spotify Client ID</label>
-        <input type="text" id="clientIdInput" placeholder="Paste 32-character Client ID..." class="w-full bg-slate-900 border border-deck-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-deck-green">
+        <input type="text" id="clientIdInput" value="4c40070fe3c94db8e13c4bc587d6e7" placeholder="Paste 32-character Client ID..." class="w-full bg-slate-900 border border-deck-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-deck-green">
       </div>
       <div class="pt-2 flex gap-2">
         <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2 bg-deck-green text-black font-bold text-xs rounded-xl shadow transition">
@@ -186,89 +179,88 @@
     const CACHED_CRATES_KEY = 'tracksort_saved_crates_v2';
     const CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
-    // The 12 Crate Definitions exactly matching the layout & taxonomy in your screenshot
     const DJ_CRATES = [
       {
         id: 'hiphop_rap',
         name: 'Hip-Hop / Rap',
-        color: '#f59e0b', // Amber/Yellow
+        color: '#f59e0b',
         regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle)/i,
         exclusions: ['house', 'techno']
       },
       {
         id: 'tech_rolling',
         name: 'Tech & Rolling House',
-        color: '#10b981', // Emerald
+        color: '#10b981',
         regex: /(tech house|rolling house|bass house|deep tech|groove room)/i,
         exclusions: ['hip hop', 'trap', 'drill']
       },
       {
         id: 'funky_groovy',
         name: 'Funky & Groovy House',
-        color: '#f97316', // Orange
+        color: '#f97316',
         regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house)/i,
         exclusions: ['techno', 'trap']
       },
       {
         id: 'deep_melodic',
         name: 'Deep & Melodic House',
-        color: '#3b82f6', // Blue
+        color: '#3b82f6',
         regex: /(deep house|melodic house|progressive house|organic house|afro house|sunset)/i,
         exclusions: ['trap', 'drill']
       },
       {
         id: 'minimal_micro',
         name: 'Minimal & Microhouse',
-        color: '#a855f7', // Purple
+        color: '#a855f7',
         regex: /(minimal house|microhouse|rominimal|minimal techno|micro house)/i,
         exclusions: ['hip hop', 'drill']
       },
       {
         id: 'afro_latin',
         name: 'Afro & Latin House',
-        color: '#ec4899', // Pink
+        color: '#ec4899',
         regex: /(afro house|latin house|tribal house|amapiano|baile|cumbia electro)/i,
         exclusions: []
       },
       {
         id: 'general_house',
         name: 'General House & Club',
-        color: '#14b8a6', // Teal
+        color: '#14b8a6',
         regex: /(house|club|electro house|dance)/i,
         exclusions: ['hip hop', 'rap', 'rock']
       },
       {
         id: 'techno_hardgroove',
         name: 'Techno & Hardgroove',
-        color: '#ef4444', // Red
+        color: '#ef4444',
         regex: /(techno|hardgroove|peak time|industrial techno|acid techno|hard dance)/i,
         exclusions: []
       },
       {
         id: 'ukg_dnb',
         name: 'UK Garage & DnB',
-        color: '#06b6d4', // Cyan
+        color: '#06b6d4',
         regex: /(uk garage|garage|2-step|drum and bass|dnb|jungle|breakbeat)/i,
         exclusions: []
       },
       {
         id: 'jazz_soul_acoustic',
         name: 'Jazz, Soul & Acoustic',
-        color: '#6366f1', // Indigo
+        color: '#6366f1',
         regex: /(jazz|soul|neo-soul|classical|piano|acoustic|lo-fi|blues)/i,
         exclusions: ['techno', 'drill']
       },
       {
         id: 'rock_alternative',
         name: 'Rock & Alternative',
-        color: '#f97316', // Light Orange
+        color: '#f97316',
         regex: /(rock|alternative|indie rock|punk|grunge|metal)/i,
         exclusions: ['hip hop', 'house']
       },
       {
         id: 'pop_dance',
         name: 'Pop & Dance',
-        color: '#8b5cf6', // Violet
+        color: '#8b5cf6',
         regex: /(pop|dance pop|synth-pop|indie pop)/i,
         exclusions: ['drill', 'techno']
       }
@@ -281,9 +273,9 @@
 
     window.addEventListener('DOMContentLoaded', async () => {
       const savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
-      document.getElementById('clientIdInput').value = savedClientId;
+      const input = document.getElementById('clientIdInput');
+      if (input) input.value = savedClientId;
 
-      // Handle OAuth Redirect
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       if (code) {
@@ -291,7 +283,6 @@
         await exchangeCodeForToken(code);
       }
 
-      // Initialize empty or cached crates
       const cached = localStorage.getItem(CACHED_CRATES_KEY);
       if (cached) {
         try {
@@ -315,7 +306,8 @@
     }
 
     function toggleAuthModal() {
-      document.getElementById('authModal').classList.toggle('hidden');
+      const modal = document.getElementById('authModal');
+      if (modal) modal.classList.toggle('hidden');
     }
 
     function getRedirectUri() {
@@ -323,7 +315,8 @@
     }
 
     async function saveAndAuthorize() {
-      const clientId = document.getElementById('clientIdInput').value.trim() || '4c40070fe3c94db8e13c4bc587d6e7';
+      const inputVal = document.getElementById('clientIdInput').value.trim();
+      const clientId = inputVal || '4c40070fe3c94db8e13c4bc587d6e7';
       localStorage.setItem(CLIENT_ID_KEY, clientId);
 
       const verifier = generateRandomString(64);
@@ -356,8 +349,10 @@
         const data = await res.json();
         if (data.access_token) {
           accessToken = data.access_token;
-          document.getElementById('authDot').className = "w-2 h-2 rounded-full bg-deck-green";
-          document.getElementById('authText').textContent = "Connected";
+          const dot = document.getElementById('authDot');
+          const txt = document.getElementById('authText');
+          if (dot) dot.className = "w-2 h-2 rounded-full bg-deck-green";
+          if (txt) txt.textContent = "Connected";
         }
       } catch (err) {
         console.error("Token error", err);
@@ -369,7 +364,6 @@
       location.reload();
     }
 
-    // Spotify Scan Pipeline
     async function startLibraryScan() {
       if (!accessToken) {
         toggleAuthModal();
@@ -461,26 +455,25 @@
       }
     }
 
-    // Render the exact aesthetic cards from your screenshot
     function renderCrates() {
       const grid = document.getElementById('crateGrid');
+      if (!grid) return;
       grid.innerHTML = '';
 
       DJ_CRATES.forEach(c => {
         const crate = crateStore[c.id] || { ...c, tracks: [], selected: true };
-        const count = crate.tracks.length;
-        const track1 = crate.tracks[0];
-        const track2 = crate.tracks[1];
+        const tracks = crate.tracks || [];
+        const count = tracks.length;
+        const track1 = tracks[0];
+        const track2 = tracks[1];
 
-        // Unique artist summary
-        const artistsSummary = crate.tracks.length 
-          ? [...new Set(crate.tracks.flatMap(t => t.artist.split(', ')))].slice(0, 4).join(', ')
+        const artistsSummary = count 
+          ? [...new Set(tracks.flatMap(t => (t.artist || '').split(', ')))].filter(Boolean).slice(0, 4).join(', ')
           : 'No tracks assigned';
 
         const card = document.createElement('div');
         card.className = "bg-deck-card border border-deck-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-deck-borderHover transition-all";
         card.innerHTML = `
-          <!-- Card Header -->
           <div>
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-2">
@@ -496,9 +489,8 @@
             <p class="text-[10px] text-slate-400 truncate mt-1">${artistsSummary}</p>
           </div>
 
-          <!-- Track Rows or Empty state -->
           <div class="space-y-1.5 min-h-[50px] flex flex-col justify-center">
-            ${count ? `
+            ${count && track1 ? `
               <div class="flex items-center justify-between text-[11px] text-slate-300">
                 <span class="truncate max-w-[130px] font-medium">\${track1.name}</span>
                 <span class="text-[10px] text-slate-500 font-mono">126 BPM · 8A</span>
@@ -513,7 +505,6 @@
             `}
           </div>
 
-          <!-- Bottom Actions -->
           <div class="flex items-center gap-2 pt-2 border-t border-deck-border/60">
             <button onclick="openCrateDrawer('${c.id}')" class="touch-press flex-1 py-1.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-deck-border text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 transition">
               <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
@@ -539,7 +530,6 @@
       renderCrates();
     }
 
-    // Drawer System
     function openCrateDrawer(id) {
       activeDrawerCrateId = id;
       const crate = crateStore[id];
@@ -607,13 +597,12 @@
       } catch (e) {}
     }
 
-    // Export Playlists
     function exportActiveDrawerCrate() {
       if (activeDrawerCrateId) exportSingleCrate(activeDrawerCrateId);
     }
 
     async function createAllSelectedPlaylists() {
-      const selected = DJ_CRATES.filter(c => crateStore[c.id]?.selected && crateStore[c.id]?.tracks.length);
+      const selected = DJ_CRATES.filter(c => crateStore[c.id]?.selected && crateStore[c.id]?.tracks?.length);
       if (!selected.length) {
         alert("Please select at least one crate that contains tracks.");
         return;
@@ -630,7 +619,7 @@
         return;
       }
       const crate = crateStore[crateId];
-      if (!crate || !crate.tracks.length) return;
+      if (!crate || !crate.tracks || !crate.tracks.length) return;
 
       try {
         const userRes = await fetch('https://api.spotify.com/v1/me', {
@@ -652,7 +641,7 @@
         });
         const pl = await plRes.json();
 
-        const uris = crate.tracks.map(t => t.uri).filter(u => u.startsWith('spotify:track:'));
+        const uris = crate.tracks.map(t => t.uri).filter(u => u && u.startsWith('spotify:track:'));
         for (let i = 0; i < uris.length; i += 50) {
           const chunk = uris.slice(i, i + 50);
           await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/tracks`, {
@@ -669,7 +658,6 @@
       }
     }
 
-    // Auth Utilities
     function generateRandomString(length) {
       const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let text = '';
