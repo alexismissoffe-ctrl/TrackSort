@@ -172,11 +172,11 @@
         </button>
       </div>
       <p class="text-xs text-slate-400 leading-relaxed">
-        Authorize with Spotify to organize liked songs into subgenre playlists.
+        Your Spotify Client ID is configured automatically below.
       </p>
       <div>
         <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Spotify Client ID</label>
-        <input type="text" id="clientIdInput" value="4c40070fe3c94db8e13c4bc587d6e7" placeholder="Paste 32-character Client ID..." class="w-full bg-slate-900 border border-deck-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-deck-green">
+        <input type="text" id="clientIdInput" value="4c40070fe3c94d4db8e13c4bc587d6e7" class="w-full bg-slate-900 border border-deck-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-deck-green font-mono">
       </div>
       <div class="pt-2 flex gap-2">
         <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2 bg-deck-green text-black font-bold text-xs rounded-xl shadow transition cursor-pointer">
@@ -192,18 +192,19 @@
   <audio id="audioPlayer" preload="auto" class="hidden"></audio>
 
   <script>
-    var CLIENT_ID_KEY = 'tracksort_client_id';
-    var ACCESS_TOKEN_KEY = 'tracksort_spotify_token';
-    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v10';
+    // Exact 32-character Client ID hardcoded directly
+    var DEFAULT_CLIENT_ID = '4c40070fe3c94d4db8e13c4bc587d6e7';
+    var CLIENT_ID_KEY = 'tracksort_client_id_v2';
+    var ACCESS_TOKEN_KEY = 'tracksort_spotify_token_v2';
+    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v11';
     var CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
-    // Comprehensive taxonomies matching artist catalogs, remixes, and keywords
     var DJ_CRATES = [
       { 
         id: 'tech_rolling', 
         name: 'Tech & Rolling House', 
         color: '#10b981', 
-        regex: /(tech house|rolling house|bass house|deep tech|groove room|minimal tech|club house|pawsa|stussy|anotr|chris stussy|cloonee|michael bibi|dennis cruz|beltran|solid grooves|fisher|dom dolla|gorillaz|san pacho|vintage culture)/i, 
+        regex: /(tech house|rolling house|bass house|deep tech|groove room|minimal tech|club house|pawsa|stussy|anotr|chris stussy|cloonee|michael bibi|dennis cruz|beltran|solid grooves|fisher|dom dolla|san pacho|vintage culture)/i, 
         exclusions: ['hip hop', 'trap', 'drill'] 
       },
       { 
@@ -400,8 +401,7 @@
     }
 
     async function saveAndAuthorize() {
-      var input = document.getElementById('clientIdInput');
-      var clientId = (input && input.value.trim()) || '4c40070fe3c94db8e13c4bc587d6e7';
+      var clientId = DEFAULT_CLIENT_ID;
       localStorage.setItem(CLIENT_ID_KEY, clientId);
 
       var verifier = generateRandomString(64);
@@ -415,7 +415,7 @@
     }
 
     async function exchangeCodeForToken(code) {
-      var clientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
+      var clientId = DEFAULT_CLIENT_ID;
       var verifier = localStorage.getItem(CODE_VERIFIER_KEY);
       var redirectUri = getRedirectUri();
 
@@ -454,7 +454,7 @@
       location.reload();
     }
 
-    // High-speed, rate-limit-free scanning
+    // Direct, rate-limit resilient scanning
     async function startLibraryScan() {
       if (!accessToken) {
         toggleAuthModal();
@@ -467,8 +467,8 @@
       var progressStatus = document.getElementById('progressStatus');
       
       progressContainer.classList.remove('hidden');
-      progressBar.style.width = '5%';
-      progressPct.textContent = '5%';
+      progressBar.style.width = '3%';
+      progressPct.textContent = '3%';
       progressStatus.textContent = "Connecting to Spotify...";
 
       try {
@@ -481,11 +481,15 @@
             headers: { 'Authorization': 'Bearer ' + accessToken }
           });
 
+          // Spotify 429 Rate Limit Cooldown Handler
           if (res.status === 429) {
-            var wait = parseInt(res.headers.get('Retry-After') || '3', 10);
-            progressStatus.textContent = 'Pacing Spotify requests... waiting ' + wait + 's';
-            await sleep((wait + 1) * 1000);
-            continue;
+            var retrySec = parseInt(res.headers.get('Retry-After') || '5', 10);
+            for (var s = retrySec; s > 0; s--) {
+              progressStatus.textContent = 'Spotify Rate Limit reached. Pausing for ' + s + 's...';
+              await sleep(1000);
+            }
+            progressStatus.textContent = 'Resuming scan...';
+            continue; // retry same page
           }
 
           if (res.status === 401) {
@@ -495,19 +499,19 @@
             return;
           }
 
-          if (!res.ok) throw new Error("HTTP " + res.status + " reading liked tracks");
+          if (!res.ok) throw new Error("HTTP " + res.status + " reading library");
 
           var data = await res.json();
           total = data.total || total;
           items = items.concat(data.items || []);
           
-          var pct = Math.min(Math.round((items.length / total) * 100), 95);
+          var pct = Math.min(Math.round((items.length / total) * 100), 96);
           progressBar.style.width = pct + '%';
           progressPct.textContent = pct + '%';
-          progressStatus.textContent = 'Loaded ' + items.length + ' of ' + total + ' tracks...';
+          progressStatus.textContent = 'Fetched ' + items.length + ' of ' + total + ' tracks...';
           
           url = data.next;
-          await sleep(100); // 100ms prevents Spotify rate limits entirely
+          await sleep(120); // 120ms keeps requests safely under Spotify rate limits
         }
 
         progressStatus.textContent = "Sorting into subgenre crates...";
@@ -524,7 +528,6 @@
             }
           }
 
-          // Combine track title, artist names, and album name for accurate instant classification
           var searchTokens = artNames.join(' ') + ' ' + (t.name || '') + ' ' + (t.album ? t.album.name : '');
           var searchStr = searchTokens.toLowerCase();
           var matched = false;
@@ -856,9 +859,8 @@
     // Startup Execution
     window.addEventListener('DOMContentLoaded', function() {
       try {
-        var savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
         var input = document.getElementById('clientIdInput');
-        if (input) input.value = savedClientId;
+        if (input) input.value = DEFAULT_CLIENT_ID;
 
         var storedToken = localStorage.getItem(ACCESS_TOKEN_KEY);
         if (storedToken) {
