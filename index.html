@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>TRACKSORT - Subgenre Sorter</title>
 
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="TrackSort">
@@ -85,7 +86,7 @@
         </button>
       </div>
 
-      <button id="scanBtn" onclick="startLibraryScan()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-deck-border text-xs font-semibold text-white flex items-center gap-1.5">
+      <button id="scanBtn" onclick="startLibraryScan()" class="touch-press px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-deck-border text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer">
         <svg class="w-3.5 h-3.5 text-deck-green" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
         <span id="scanBtnText">Scan Library</span>
       </button>
@@ -116,10 +117,10 @@
         <span id="librarySummaryBadge" class="bg-slate-900 border border-deck-border text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-mono">12 Crates Configured</span>
       </div>
       <div class="flex items-center gap-3">
-        <button onclick="toggleSelectAll(true)" class="text-deck-green font-medium">Select All</button>
+        <button onclick="toggleSelectAll(true)" class="text-deck-green font-medium cursor-pointer">Select All</button>
         <span class="text-slate-700">|</span>
-        <button onclick="toggleSelectAll(false)" class="text-slate-400">Deselect</button>
-        <button onclick="createAllSelectedPlaylists()" class="touch-press ml-2 px-3 py-1 bg-deck-green text-black font-bold rounded-lg text-[11px] shadow">Export Selected</button>
+        <button onclick="toggleSelectAll(false)" class="text-slate-400 cursor-pointer">Deselect</button>
+        <button onclick="createAllSelectedPlaylists()" class="touch-press ml-2 px-3 py-1 bg-deck-green text-black font-bold rounded-lg text-[11px] shadow cursor-pointer">Export Selected</button>
       </div>
     </div>
 
@@ -136,7 +137,7 @@
         <h3 id="drawerCrateTitle" class="text-base font-bold text-white leading-tight">Crate Name</h3>
         <p id="drawerCrateSub" class="text-xs text-slate-400 mt-0.5">0 tracks</p>
       </div>
-      <button onclick="exportActiveDrawerCrate()" class="touch-press px-3 py-1.5 rounded-xl bg-deck-green text-black font-semibold text-xs flex items-center gap-1.5 shadow">
+      <button onclick="exportActiveDrawerCrate()" class="touch-press px-3 py-1.5 rounded-xl bg-deck-green text-black font-semibold text-xs flex items-center gap-1.5 shadow cursor-pointer">
         <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
         Create Spotify Playlist
       </button>
@@ -150,7 +151,7 @@
     <div class="bg-deck-card w-full max-w-md rounded-2xl border border-deck-border p-6 space-y-4">
       <div class="flex items-center justify-between">
         <h3 class="text-base font-bold text-white">Spotify Connection</h3>
-        <button onclick="toggleAuthModal()" class="text-slate-400 hover:text-white p-1">
+        <button onclick="toggleAuthModal()" class="text-slate-400 hover:text-white p-1 cursor-pointer">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
@@ -162,10 +163,10 @@
         <input type="text" id="clientIdInput" value="4c40070fe3c94db8e13c4bc587d6e7" placeholder="Paste 32-character Client ID..." class="w-full bg-slate-900 border border-deck-border rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-deck-green">
       </div>
       <div class="pt-2 flex gap-2">
-        <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2 bg-deck-green text-black font-bold text-xs rounded-xl shadow transition">
+        <button onclick="saveAndAuthorize()" class="touch-press flex-1 py-2 bg-deck-green text-black font-bold text-xs rounded-xl shadow transition cursor-pointer">
           Authorize with Spotify
         </button>
-        <button onclick="clearStoredAuth()" class="touch-press px-3 py-2 bg-slate-800 text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-700">
+        <button onclick="clearStoredAuth()" class="touch-press px-3 py-2 bg-slate-800 text-slate-300 font-semibold text-xs rounded-xl hover:bg-slate-700 cursor-pointer">
           Reset
         </button>
       </div>
@@ -175,11 +176,11 @@
   <audio id="audioPlayer" preload="auto" class="hidden"></audio>
 
   <script>
-    const CLIENT_ID_KEY = 'tracksort_client_id';
-    const CACHED_CRATES_KEY = 'tracksort_saved_crates_v3';
-    const CODE_VERIFIER_KEY = 'tracksort_code_verifier';
+    var CLIENT_ID_KEY = 'tracksort_client_id';
+    var CACHED_CRATES_KEY = 'tracksort_saved_crates_v4';
+    var CODE_VERIFIER_KEY = 'tracksort_code_verifier';
 
-    const DJ_CRATES = [
+    var DJ_CRATES = [
       { id: 'hiphop_rap', name: 'Hip-Hop / Rap', color: '#f59e0b', regex: /(rap|hip.?hop|trap|drill|boom.?bap|phonk|gangsta|freestyle)/i, exclusions: ['house', 'techno'] },
       { id: 'tech_rolling', name: 'Tech & Rolling House', color: '#10b981', regex: /(tech house|rolling house|bass house|deep tech|groove room)/i, exclusions: ['hip hop', 'trap', 'drill'] },
       { id: 'funky_groovy', name: 'Funky & Groovy House', color: '#f97316', regex: /(funky house|disco house|jackin|french touch|nu disco|vocal house)/i, exclusions: ['techno', 'trap'] },
@@ -194,13 +195,12 @@
       { id: 'pop_dance', name: 'Pop & Dance', color: '#8b5cf6', regex: /(pop|dance pop|synth-pop|indie pop)/i, exclusions: ['drill', 'techno'] }
     ];
 
-    let accessToken = null;
-    let crateStore = {};
-    let activeDrawerCrateId = null;
-    const audio = document.getElementById('audioPlayer');
+    var accessToken = null;
+    var crateStore = {};
+    var activeDrawerCrateId = null;
 
     function toggleAuthModal() {
-      const modal = document.getElementById('authModal');
+      var modal = document.getElementById('authModal');
       if (modal) {
         modal.classList.toggle('hidden');
       }
@@ -208,74 +208,86 @@
 
     function initEmptyStore() {
       crateStore = {};
-      DJ_CRATES.forEach(c => {
-        crateStore[c.id] = { ...c, tracks: [], selected: true };
-      });
+      for (var i = 0; i < DJ_CRATES.length; i++) {
+        var c = DJ_CRATES[i];
+        crateStore[c.id] = { id: c.id, name: c.name, color: c.color, regex: c.regex, exclusions: c.exclusions, tracks: [], selected: true };
+      }
       renderCrates();
     }
 
     function renderCrates() {
-      const grid = document.getElementById('crateGrid');
+      var grid = document.getElementById('crateGrid');
       if (!grid) return;
       grid.innerHTML = '';
 
-      DJ_CRATES.forEach(c => {
-        const crate = crateStore[c.id] || { ...c, tracks: [], selected: true };
-        const tracks = Array.isArray(crate.tracks) ? crate.tracks : [];
-        const count = tracks.length;
-        const track1 = tracks[0];
-        const track2 = tracks[1];
+      for (var i = 0; i < DJ_CRATES.length; i++) {
+        var c = DJ_CRATES[i];
+        var crate = crateStore[c.id] || { tracks: [], selected: true };
+        var tracks = Array.isArray(crate.tracks) ? crate.tracks : [];
+        var count = tracks.length;
 
-        const artistsSummary = count 
-          ? [...new Set(tracks.flatMap(t => (t.artist || '').split(', ')))].filter(Boolean).slice(0, 4).join(', ')
-          : 'No tracks assigned';
+        var artistsSummary = 'No tracks assigned';
+        if (count > 0) {
+          var artistList = [];
+          for (var t = 0; t < tracks.length; t++) {
+            if (tracks[t] && tracks[t].artist) {
+              var parts = tracks[t].artist.split(', ');
+              for (var p = 0; p < parts.length; p++) {
+                if (parts[p] && artistList.indexOf(parts[p]) === -1) {
+                  artistList.push(parts[p]);
+                }
+              }
+            }
+          }
+          artistsSummary = artistList.slice(0, 4).join(', ');
+        }
 
-        const card = document.createElement('div');
+        var trackRowsHtml = '<p class="text-[11px] text-slate-600 italic">Crate empty</p>';
+        if (count > 0 && tracks[0]) {
+          var t1 = tracks[0];
+          trackRowsHtml = '<div class="flex items-center justify-between text-[11px] text-slate-300">' +
+            '<span class="truncate max-w-[130px] font-medium">' + (t1.name || '') + '</span>' +
+            '<span class="text-[10px] text-slate-500 font-mono">126 BPM · 8A</span>' +
+            '</div>';
+          if (tracks[1]) {
+            var t2 = tracks[1];
+            trackRowsHtml += '<div class="flex items-center justify-between text-[11px] text-slate-300">' +
+              '<span class="truncate max-w-[130px] font-medium">' + (t2.name || '') + '</span>' +
+              '<span class="text-[10px] text-slate-500 font-mono">124 BPM · 2A</span>' +
+              '</div>';
+          }
+        }
+
+        var badgeClass = count ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-900';
+        var isChecked = crate.selected ? 'checked' : '';
+
+        var card = document.createElement('div');
         card.className = "bg-deck-card border border-deck-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-deck-borderHover transition-all";
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <div class="flex items-center gap-2">
-                <input type="checkbox" ${crate.selected ? 'checked' : ''} onchange="toggleSelect('${c.id}', this.checked)" class="w-4 h-4 rounded accent-blue-500 bg-slate-900 border-deck-border cursor-pointer">
-                <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${c.color}"></span>
-              </div>
-              <span class="text-[10px] font-mono tracking-wider ${count ? 'text-slate-300 bg-slate-800/80' : 'text-slate-600 bg-slate-900'} px-2 py-0.5 rounded-md border border-slate-800">
-                ${count} Tracks
-              </span>
-            </div>
-
-            <h3 class="text-sm font-bold text-white tracking-tight leading-tight">${c.name}</h3>
-            <p class="text-[10px] text-slate-400 truncate mt-1">${artistsSummary}</p>
-          </div>
-
-          <div class="space-y-1.5 min-h-[50px] flex flex-col justify-center">
-            ${count && track1 ? `
-              <div class="flex items-center justify-between text-[11px] text-slate-300">
-                <span class="truncate max-w-[130px] font-medium">\${track1.name || ''}</span>
-                <span class="text-[10px] text-slate-500 font-mono">126 BPM · 8A</span>
-              </div>
-              \${track2 ? `
-              <div class="flex items-center justify-between text-[11px] text-slate-300">
-                <span class="truncate max-w-[130px] font-medium">${track2.name || ''}</span>
-                <span class="text-[10px] text-slate-500 font-mono">124 BPM · 2A</span>
-              </div>` : ''}
-            ` : `
-              <p class="text-[11px] text-slate-600 italic">Crate empty</p>
-            `}
-          </div>
-
-          <div class="flex items-center gap-2 pt-2 border-t border-deck-border/60">
-            <button onclick="openCrateDrawer('${c.id}')" class="touch-press flex-1 py-1.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-deck-border text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 transition cursor-pointer">
-              <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
-              View Crate
-            </button>
-            <button onclick="exportSingleCrate('${c.id}')" title="Export to Spotify" class="touch-press p-1.5 px-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-deck-border text-slate-300 text-xs font-bold transition cursor-pointer">
-              +
-            </button>
-          </div>
-        `;
+        card.innerHTML = 
+          '<div>' +
+            '<div class="flex items-center justify-between mb-2">' +
+              '<div class="flex items-center gap-2">' +
+                '<input type="checkbox" ' + isChecked + ' onchange="toggleSelect(\'' + c.id + '\', this.checked)" class="w-4 h-4 rounded accent-blue-500 bg-slate-900 border-deck-border cursor-pointer">' +
+                '<span class="w-2.5 h-2.5 rounded-full" style="background-color: ' + c.color + '"></span>' +
+              '</div>' +
+              '<span class="text-[10px] font-mono tracking-wider ' + badgeClass + ' px-2 py-0.5 rounded-md border border-slate-800">' + count + ' Tracks</span>' +
+            '</div>' +
+            '<h3 class="text-sm font-bold text-white tracking-tight leading-tight">' + c.name + '</h3>' +
+            '<p class="text-[10px] text-slate-400 truncate mt-1">' + artistsSummary + '</p>' +
+          '</div>' +
+          '<div class="space-y-1.5 min-h-[50px] flex flex-col justify-center">' +
+            trackRowsHtml +
+          '</div>' +
+          '<div class="flex items-center gap-2 pt-2 border-t border-deck-border/60">' +
+            '<button onclick="openCrateDrawer(\'' + c.id + '\')" class="touch-press flex-1 py-1.5 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-deck-border text-xs font-semibold text-slate-200 flex items-center justify-center gap-2 transition cursor-pointer">' +
+              '<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>' +
+              'View Crate' +
+            '</button>' +
+            '<button onclick="exportSingleCrate(\'' + c.id + '\')" title="Export to Spotify" class="touch-press p-1.5 px-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-deck-border text-slate-300 text-xs font-bold transition cursor-pointer">+</button>' +
+          '</div>';
+        
         grid.appendChild(card);
-      });
+      }
     }
 
     function toggleSelect(id, val) {
@@ -283,9 +295,10 @@
     }
 
     function toggleSelectAll(val) {
-      DJ_CRATES.forEach(c => {
-        if (crateStore[c.id]) crateStore[c.id].selected = val;
-      });
+      for (var i = 0; i < DJ_CRATES.length; i++) {
+        var id = DJ_CRATES[i].id;
+        if (crateStore[id]) crateStore[id].selected = val;
+      }
       renderCrates();
     }
 
@@ -294,27 +307,27 @@
     }
 
     async function saveAndAuthorize() {
-      const input = document.getElementById('clientIdInput');
-      const clientId = (input && input.value.trim()) || '4c40070fe3c94db8e13c4bc587d6e7';
+      var input = document.getElementById('clientIdInput');
+      var clientId = (input && input.value.trim()) || '4c40070fe3c94db8e13c4bc587d6e7';
       localStorage.setItem(CLIENT_ID_KEY, clientId);
 
-      const verifier = generateRandomString(64);
+      var verifier = generateRandomString(64);
       localStorage.setItem(CODE_VERIFIER_KEY, verifier);
-      const challenge = await generateCodeChallenge(verifier);
+      var challenge = await generateCodeChallenge(verifier);
 
-      const scope = 'user-library-read playlist-modify-public playlist-modify-private';
-      const redirectUri = getRedirectUri();
+      var scope = 'user-library-read playlist-modify-public playlist-modify-private';
+      var redirectUri = getRedirectUri();
 
-      window.location.href = `https://accounts.spotify.com/authorize?response_type=code&client_id=${encodeURIComponent(clientId)}&scope=${encodeURIComponent(scope)}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge_method=S256&code_challenge=${encodeURIComponent(challenge)}`;
+      window.location.href = 'https://accounts.spotify.com/authorize?response_type=code&client_id=' + encodeURIComponent(clientId) + '&scope=' + encodeURIComponent(scope) + '&redirect_uri=' + encodeURIComponent(redirectUri) + '&code_challenge_method=S256&code_challenge=' + encodeURIComponent(challenge);
     }
 
     async function exchangeCodeForToken(code) {
-      const clientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
-      const verifier = localStorage.getItem(CODE_VERIFIER_KEY);
-      const redirectUri = getRedirectUri();
+      var clientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
+      var verifier = localStorage.getItem(CODE_VERIFIER_KEY);
+      var redirectUri = getRedirectUri();
 
       try {
-        const res = await fetch('https://accounts.spotify.com/api/token', {
+        var res = await fetch('https://accounts.spotify.com/api/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
@@ -325,11 +338,11 @@
             code_verifier: verifier
           })
         });
-        const data = await res.json();
+        var data = await res.json();
         if (data.access_token) {
           accessToken = data.access_token;
-          const dot = document.getElementById('authDot');
-          const txt = document.getElementById('authText');
+          var dot = document.getElementById('authDot');
+          var txt = document.getElementById('authText');
           if (dot) dot.className = "w-2 h-2 rounded-full bg-deck-green";
           if (txt) txt.textContent = "Connected";
         }
@@ -349,82 +362,115 @@
         return;
       }
 
-      const progressContainer = document.getElementById('progressContainer');
-      const progressBar = document.getElementById('progressBar');
-      const progressPct = document.getElementById('progressPct');
-      const progressStatus = document.getElementById('progressStatus');
+      var progressContainer = document.getElementById('progressContainer');
+      var progressBar = document.getElementById('progressBar');
+      var progressPct = document.getElementById('progressPct');
+      var progressStatus = document.getElementById('progressStatus');
       
       progressContainer.classList.remove('hidden');
       progressStatus.textContent = "Fetching all liked tracks...";
 
       try {
-        let items = [];
-        let url = 'https://api.spotify.com/v1/me/tracks?limit=50';
-        let total = 0;
+        var items = [];
+        var url = 'https://api.spotify.com/v1/me/tracks?limit=50';
+        var total = 0;
 
         while (url) {
-          const res = await fetch(url, { headers: { 'Authorization': `Bearer ${accessToken}` } });
+          var res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + accessToken } });
           if (!res.ok) throw new Error("Spotify track fetch failed");
-          const data = await res.json();
+          var data = await res.json();
           total = data.total;
           items = items.concat(data.items);
           
-          const pct = Math.min(Math.round((items.length / total) * 50), 50);
-          progressBar.style.width = `${pct}%`;
-          progressPct.textContent = `${pct}%`;
+          var pct = Math.min(Math.round((items.length / total) * 50), 50);
+          progressBar.style.width = pct + '%';
+          progressPct.textContent = pct + '%';
           url = data.next;
         }
 
         progressStatus.textContent = "Resolving subgenres from artist profiles...";
-        const artistIds = [...new Set(items.flatMap(i => i.track?.artists?.map(a => a.id) || []))].filter(Boolean);
-        const artistGenreMap = {};
+        var artistIds = [];
+        for (var i = 0; i < items.length; i++) {
+          var track = items[i].track;
+          if (track && track.artists) {
+            for (var a = 0; a < track.artists.length; a++) {
+              var aId = track.artists[a].id;
+              if (aId && artistIds.indexOf(aId) === -1) artistIds.push(aId);
+            }
+          }
+        }
 
-        for (let i = 0; i < artistIds.length; i += 50) {
-          const batch = artistIds.slice(i, i + 50);
-          const aRes = await fetch(`https://api.spotify.com/v1/artists?ids=${batch.join(',')}`, {
-            headers: { 'Authorization': `Bearer ${accessToken}` }
+        var artistGenreMap = {};
+        for (var b = 0; b < artistIds.length; b += 50) {
+          var batch = artistIds.slice(b, b + 50);
+          var aRes = await fetch('https://api.spotify.com/v1/artists?ids=' + batch.join(','), {
+            headers: { 'Authorization': 'Bearer ' + accessToken }
           });
           if (aRes.ok) {
-            const aData = await aRes.json();
-            aData.artists.forEach(a => {
-              if (a) artistGenreMap[a.id] = a.genres || [];
-            });
+            var aData = await aRes.json();
+            if (aData.artists) {
+              for (var k = 0; k < aData.artists.length; k++) {
+                var art = aData.artists[k];
+                if (art) artistGenreMap[art.id] = art.genres || [];
+              }
+            }
           }
-          const pct = 50 + Math.min(Math.round((i / artistIds.length) * 48), 48);
-          progressBar.style.width = `${pct}%`;
-          progressPct.textContent = `${pct}%`;
+          var pctBatch = 50 + Math.min(Math.round((b / artistIds.length) * 48), 48);
+          progressBar.style.width = pctBatch + '%';
+          progressPct.textContent = pctBatch + '%';
         }
 
         initEmptyStore();
 
-        items.forEach(({ track }) => {
-          if (!track || !track.id) return;
-          const genres = track.artists?.flatMap(a => artistGenreMap[a.id] || []) || [];
-          const genreStr = genres.join(' ').toLowerCase();
+        for (var j = 0; j < items.length; j++) {
+          var t = items[j].track;
+          if (!t || !t.id) continue;
 
-          for (const def of DJ_CRATES) {
-            const hasExclusion = def.exclusions?.some(ex => genreStr.includes(ex));
-            if (!hasExclusion && def.regex.test(genreStr)) {
+          var trackGenres = [];
+          if (t.artists) {
+            for (var artIdx = 0; artIdx < t.artists.length; artIdx++) {
+              var gList = artistGenreMap[t.artists[artIdx].id] || [];
+              trackGenres = trackGenres.concat(gList);
+            }
+          }
+          var genreStr = trackGenres.join(' ').toLowerCase();
+
+          for (var cIdx = 0; cIdx < DJ_CRATES.length; cIdx++) {
+            var def = DJ_CRATES[cIdx];
+            var excluded = false;
+            if (def.exclusions) {
+              for (var ex = 0; ex < def.exclusions.length; ex++) {
+                if (genreStr.indexOf(def.exclusions[ex]) !== -1) {
+                  excluded = true;
+                  break;
+                }
+              }
+            }
+            if (!excluded && def.regex.test(genreStr)) {
+              var artNames = [];
+              if (t.artists) {
+                for (var an = 0; an < t.artists.length; an++) artNames.push(t.artists[an].name);
+              }
               crateStore[def.id].tracks.push({
-                id: track.id,
-                uri: `spotify:track:${track.id}`,
-                name: track.name,
-                artist: track.artists.map(a => a.name).join(', '),
-                preview_url: track.preview_url,
-                image: track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
+                id: t.id,
+                uri: 'spotify:track:' + t.id,
+                name: t.name,
+                artist: artNames.join(', '),
+                preview_url: t.preview_url,
+                image: (t.album && t.album.images && t.album.images[0] && t.album.images[0].url) || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=100&q=80'
               });
               break;
             }
           }
-        });
+        }
 
         localStorage.setItem(CACHED_CRATES_KEY, JSON.stringify(crateStore));
 
-        progressBar.style.width = `100%`;
-        progressPct.textContent = `100%`;
-        setTimeout(() => progressContainer.classList.add('hidden'), 500);
+        progressBar.style.width = '100%';
+        progressPct.textContent = '100%';
+        setTimeout(function() { progressContainer.classList.add('hidden'); }, 500);
 
-        document.getElementById('librarySummaryBadge').textContent = `${items.length} Liked Tracks Sorted`;
+        document.getElementById('librarySummaryBadge').textContent = items.length + ' Liked Tracks Sorted';
         renderCrates();
 
       } catch (err) {
@@ -436,36 +482,37 @@
 
     function openCrateDrawer(id) {
       activeDrawerCrateId = id;
-      const crate = crateStore[id];
+      var crate = crateStore[id];
       if (!crate) return;
 
       document.getElementById('drawerCrateTitle').textContent = crate.name;
-      document.getElementById('drawerCrateSub').textContent = `${crate.tracks.length} tracks`;
+      document.getElementById('drawerCrateSub').textContent = (crate.tracks ? crate.tracks.length : 0) + ' tracks';
 
-      const list = document.getElementById('drawerTrackList');
+      var list = document.getElementById('drawerTrackList');
       list.innerHTML = '';
 
-      if (!crate.tracks.length) {
+      if (!crate.tracks || !crate.tracks.length) {
         list.innerHTML = '<p class="text-xs text-slate-500 text-center py-10 italic">No tracks categorized in this crate.</p>';
       } else {
-        crate.tracks.forEach(track => {
-          const row = document.createElement('div');
+        for (var i = 0; i < crate.tracks.length; i++) {
+          var track = crate.tracks[i];
+          var row = document.createElement('div');
           row.className = "flex items-center justify-between p-2.5 rounded-xl bg-slate-900 border border-deck-border hover:border-slate-600 cursor-pointer touch-press";
-          row.onclick = () => playPreview(track);
-          row.innerHTML = `
-            <div class="flex items-center gap-3 overflow-hidden flex-1">
-              <img src="${track.image}" class="w-9 h-9 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="art">
-              <div class="truncate">
-                <p class="text-xs font-bold text-white truncate leading-tight">${track.name}</p>
-                <p class="text-[10px] text-slate-400 truncate mt-0.5">${track.artist}</p>
-              </div>
-            </div>
-            <button class="p-1 text-deck-green">
-              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-            </button>
-          `;
+          row.setAttribute('data-url', track.preview_url || '');
+          row.onclick = function() { playAudioPreview(this.getAttribute('data-url')); };
+          row.innerHTML = 
+            '<div class="flex items-center gap-3 overflow-hidden flex-1">' +
+              '<img src="' + track.image + '" class="w-9 h-9 rounded-lg object-cover bg-slate-800 flex-shrink-0" alt="art">' +
+              '<div class="truncate">' +
+                '<p class="text-xs font-bold text-white truncate leading-tight">' + track.name + '</p>' +
+                '<p class="text-[10px] text-slate-400 truncate mt-0.5">' + track.artist + '</p>' +
+              '</div>' +
+            '</div>' +
+            '<button class="p-1 text-deck-green">' +
+              '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>' +
+            '</button>';
           list.appendChild(row);
-        });
+        }
       }
 
       document.getElementById('crateDrawerBackdrop').classList.remove('opacity-0', 'pointer-events-none');
@@ -475,18 +522,20 @@
     function closeCrateDrawer() {
       document.getElementById('crateDrawerBackdrop').classList.add('opacity-0', 'pointer-events-none');
       document.getElementById('crateDrawer').classList.add('translate-y-full');
-      audio.pause();
+      var audio = document.getElementById('audioPlayer');
+      if (audio) audio.pause();
     }
 
-    function playPreview(track) {
-      if (track.preview_url) {
-        audio.src = track.preview_url;
-        audio.play().catch(console.error);
+    function playAudioPreview(url) {
+      var audio = document.getElementById('audioPlayer');
+      if (url && audio) {
+        audio.src = url;
+        audio.play().catch(function(e) { console.warn(e); });
       } else {
         try {
-          const ctx = new (window.AudioContext || window.webkitAudioContext)();
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
           osc.frequency.setValueAtTime(440, ctx.currentTime);
           gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.8);
           osc.connect(gain);
@@ -502,13 +551,19 @@
     }
 
     async function createAllSelectedPlaylists() {
-      const selected = DJ_CRATES.filter(c => crateStore[c.id]?.selected && crateStore[c.id]?.tracks?.length);
+      var selected = [];
+      for (var i = 0; i < DJ_CRATES.length; i++) {
+        var c = DJ_CRATES[i];
+        if (crateStore[c.id] && crateStore[c.id].selected && crateStore[c.id].tracks && crateStore[c.id].tracks.length) {
+          selected.push(c.id);
+        }
+      }
       if (!selected.length) {
         alert("Please select at least one crate that contains tracks.");
         return;
       }
-      for (const c of selected) {
-        await exportSingleCrate(c.id);
+      for (var s = 0; s < selected.length; s++) {
+        await exportSingleCrate(selected[s]);
       }
       alert("Selected crates exported to your Spotify account!");
     }
@@ -518,36 +573,40 @@
         toggleAuthModal();
         return;
       }
-      const crate = crateStore[crateId];
+      var crate = crateStore[crateId];
       if (!crate || !crate.tracks || !crate.tracks.length) return;
 
       try {
-        const userRes = await fetch('https://api.spotify.com/v1/me', {
-          headers: { 'Authorization': `Bearer ${accessToken}` }
+        var userRes = await fetch('https://api.spotify.com/v1/me', {
+          headers: { 'Authorization': 'Bearer ' + accessToken }
         });
-        const user = await userRes.json();
+        var user = await userRes.json();
 
-        const plRes = await fetch(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+        var plRes = await fetch('https://api.spotify.com/v1/users/' + user.id + '/playlists', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            'Authorization': 'Bearer ' + accessToken,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            name: `Liked - ${crate.name}`,
-            description: `Generated by TrackSort DJ Crate Deck.`,
+            name: 'Liked - ' + crate.name,
+            description: 'Generated by TrackSort DJ Crate Deck.',
             public: false
           })
         });
-        const pl = await plRes.json();
+        var pl = await plRes.json();
 
-        const uris = crate.tracks.map(t => t.uri).filter(u => u && u.startsWith('spotify:track:'));
-        for (let i = 0; i < uris.length; i += 50) {
-          const chunk = uris.slice(i, i + 50);
-          await fetch(`https://api.spotify.com/v1/playlists/${pl.id}/tracks`, {
+        var uris = [];
+        for (var u = 0; u < crate.tracks.length; u++) {
+          if (crate.tracks[u] && crate.tracks[u].uri) uris.push(crate.tracks[u].uri);
+        }
+
+        for (var i = 0; i < uris.length; i += 50) {
+          var chunk = uris.slice(i, i + 50);
+          await fetch('https://api.spotify.com/v1/playlists/' + pl.id + '/tracks', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${accessToken}`,
+              'Authorization': 'Bearer ' + accessToken,
               'Content-Type': 'application/json'
             },
             body: JSON.stringify({ uris: chunk })
@@ -559,52 +618,54 @@
     }
 
     function generateRandomString(length) {
-      const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let text = '';
-      for (let i = 0; i < length; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
+      var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      var text = '';
+      for (var i = 0; i < length; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
       return text;
     }
 
     async function generateCodeChallenge(verifier) {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(verifier);
-      const digest = await window.crypto.subtle.digest('SHA-256', data);
-      return btoa(String.fromCharCode(...new Uint8Array(digest)))
+      var encoder = new TextEncoder();
+      var data = encoder.encode(verifier);
+      var digest = await window.crypto.subtle.digest('SHA-256', data);
+      return btoa(String.fromCharCode.apply(null, new Uint8Array(digest)))
         .replace(/=/g, '')
         .replace(/\+/g, '-')
         .replace(/\//g, '_');
     }
 
-    // Startup
-    try {
-      const savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
-      const input = document.getElementById('clientIdInput');
-      if (input) input.value = savedClientId;
+    // Safe Startup Execution
+    window.addEventListener('DOMContentLoaded', function() {
+      try {
+        var savedClientId = localStorage.getItem(CLIENT_ID_KEY) || '4c40070fe3c94db8e13c4bc587d6e7';
+        var input = document.getElementById('clientIdInput');
+        if (input) input.value = savedClientId;
 
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      if (code) {
-        history.replaceState(null, '', window.location.pathname);
-        exchangeCodeForToken(code);
-      }
+        var params = new URLSearchParams(window.location.search);
+        var code = params.get('code');
+        if (code) {
+          history.replaceState(null, '', window.location.pathname);
+          exchangeCodeForToken(code);
+        }
 
-      const cached = localStorage.getItem(CACHED_CRATES_KEY);
-      if (cached) {
-        try {
-          crateStore = JSON.parse(cached);
-          renderCrates();
-          const badge = document.getElementById('librarySummaryBadge');
-          if (badge) badge.textContent = 'Library Restored from Cache';
-        } catch (e) {
+        var cached = localStorage.getItem(CACHED_CRATES_KEY);
+        if (cached) {
+          try {
+            crateStore = JSON.parse(cached);
+            renderCrates();
+            var badge = document.getElementById('librarySummaryBadge');
+            if (badge) badge.textContent = 'Library Restored from Cache';
+          } catch (e) {
+            initEmptyStore();
+          }
+        } else {
           initEmptyStore();
         }
-      } else {
+      } catch (err) {
+        console.error("Safe startup caught:", err);
         initEmptyStore();
       }
-    } catch (err) {
-      console.error("Startup error handled:", err);
-      initEmptyStore();
-    }
+    });
   </script>
 </body>
 </html>
